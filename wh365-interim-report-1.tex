@@ -230,6 +230,24 @@ how resource usage increases with more complex processor-driven programs.
 \subsection{Softwareblink}
 \label{sec:Softwareblink}
 
+The second program evaluated was \texttt{softwareblink}. 
+In contrast to \texttt{hardwareblink}, 
+this design makes use of the full RISC-V processor core 
+to execute a compiled C program that toggles \textit{LED D14} in software. 
+The program operates by writing to a memory-mapped I/O register at regular intervals, 
+with timing determined by a simple delay loop. 
+This introduces a significant increase in logic complexity, 
+as instruction decoding, arithmetic, control logic, and memory access logic 
+are all active.
+
+To synthesise this design, \texttt{softwareblink.c} was compiled 
+using the RISC-V GCC toolchain into \texttt{program.hex} and \texttt{data.hex}, 
+which were then loaded into the processor design 
+before synthesis using \texttt{yosys} and place-and-route using \texttt{nextpnr}.
+
+Table \ref{tab:software_yosys_report} shows the breakdown of primitive cell usage 
+as reported by \texttt{yosys} after synthesis.
+
 \begin{table}[H]
     \centering
     \begin{tabular}{|l|c|}
@@ -250,6 +268,12 @@ how resource usage increases with more complex processor-driven programs.
     \label{tab:software_yosys_report}
 \end{table}
 
+Table \ref{tab:software_pnr_report} shows the corresponding logic usage 
+on the FPGA fabric as reported by \texttt{nextpnr}. 
+This design consumes 50\% of the device's logic cell resources 
+and two-thirds of its available block RAMs, 
+representing a substantial increase in resource usage 
+relative to \texttt{hardwareblink}.
 
 \begin{table}[H]
     \centering
@@ -268,7 +292,13 @@ how resource usage increases with more complex processor-driven programs.
     \label{tab:software_pnr_report}
 \end{table}
 
-
+This evaluation establishes the baseline resource cost 
+of running programs on the processor. 
+The increased logic and memory usage, relative to \texttt{hardwareblink}, 
+reflect the added complexity of 
+instruction decoding, pipeline control, and memory access. 
+These results provide a benchmark for future optimisations 
+aimed at reducing the resource footprint of the processor.
 
 \subsection{Bubblesort}
 \label{sec:Bubblesort}
