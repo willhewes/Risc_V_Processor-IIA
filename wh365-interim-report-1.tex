@@ -187,7 +187,8 @@ in Table \ref{tab:hardware_yosys_report} below.
         \texttt{SB\_HFOSC} internal oscillator & 1 \\
         \hline
     \end{tabular}
-    \caption{Primitive cell usage reported by \texttt{yosys} for the \texttt{hardwareblink} design}
+    \caption{Primitive cell usage reported by 
+    \texttt{yosys} for the \texttt{hardwareblink} design}
     \label{tab:hardware_yosys_report}
 \end{table}
 
@@ -264,7 +265,8 @@ as reported by \texttt{yosys} after synthesis.
         \texttt{SB\_HFOSC} internal oscillator & 1 \\
         \hline
     \end{tabular}
-    \caption{Primitive cell usage reported by \texttt{yosys} for the \texttt{softwareblink} processor design}
+    \caption{Primitive cell usage reported by 
+    \texttt{yosys} for the \texttt{softwareblink} processor design}
     \label{tab:software_yosys_report}
 \end{table}
 
@@ -302,6 +304,48 @@ aimed at reducing the resource footprint of the processor.
 
 \subsection{Bubblesort}
 \label{sec:Bubblesort}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Primitive} & \textbf{Count} \\
+        \hline
+        \texttt{SB\_LUT4} logic cells (combinational) & 2\,344 \\
+        \texttt{SB\_DFF} flip-flops & 415 \\
+        \texttt{SB\_DFFE} flip-flops with clock enable & 154 \\
+        \texttt{SB\_DFFSR} flip-flops with set/reset & 100 \\
+        \texttt{SB\_DFFSS} flip-flops with set/set & 4 \\
+        %\texttt{SB\_DFFESR} flip-flops with enable + set/reset & 2 \\
+        %\texttt{SB\_DFFN} negative edge flip-flop & 1 \\
+        \texttt{SB\_CARRY} carry-chain elements & 216 \\
+        \texttt{SB\_RAM40\_4K} block RAMs & 20 \\
+        \texttt{SB\_HFOSC} internal oscillator & 1 \\
+        \hline
+    \end{tabular}
+    \caption{Primitive cell usage reported by 
+    \texttt{yosys} for the \texttt{bubblesort} processor design}
+    \label{tab:bubblesort_yosys_report}
+\end{table}
+
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{0.7\textwidth}{X c c}
+        \toprule
+        Resource type & Used & \% of UP5K total \\ \midrule
+        Logic cells (\texttt{ICESTORM\_LC}) & 3073 / 5280 & 58\,\% \\
+        Block RAMs (\texttt{ICESTORM\_RAM}) & 20 / 30 & 66\,\% \\
+        IO buffers (\texttt{SB\_IO}) & 8 / 96 & 8\,\% \\
+        Global buffers (\texttt{SB\_GB}) & 5 / 8 & 62\,\% \\
+        HF oscillators (\texttt{ICESTORM\_HFOSC}) & 1 / 1 & 100\,\% \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Place-and-route logic utilisation reported by 
+    \texttt{nextpnr} for \texttt{bubblesort}}
+    \label{tab:bubblesort_pnr_report}
+\end{table}
+
 
 \section{Conclusion and Future Work}
 \label{sec:Conclusion_and_Future_Work}
