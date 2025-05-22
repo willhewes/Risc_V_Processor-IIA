@@ -305,6 +305,22 @@ aimed at reducing the resource footprint of the processor.
 \subsection{Bubblesort}
 \label{sec:Bubblesort}
 
+The third program evaluated was \texttt{bubblesort}, 
+which tests the processor under a significantly 
+heavier computational load compared to \texttt{softwareblink}. 
+The program implements a nested loop to sort a small array in memory, 
+exercising the arithmetic, comparison, branching, 
+and memory access capabilities of the RISC-V core. 
+This makes it a more demanding benchmark for 
+evaluating resource utilisation.
+
+As with the previous example, 
+\texttt{bubblesort.c} was compiled into 
+\texttt{program.hex} and \texttt{data.hex}, 
+which were loaded into the processor before synthesis. 
+Table \ref{tab:bubblesort_yosys_report} shows the resulting breakdown of 
+primitive cells as reported by \texttt{yosys}.
+
 \begin{table}[H]
     \centering
     \begin{tabular}{|l|c|}
@@ -328,6 +344,9 @@ aimed at reducing the resource footprint of the processor.
     \label{tab:bubblesort_yosys_report}
 \end{table}
 
+The corresponding place-and-route results reported by 
+\texttt{nextpnr} are shown in Table \ref{tab:bubblesort_pnr_report}.
+
 
 \begin{table}[H]
     \centering
@@ -346,6 +365,16 @@ aimed at reducing the resource footprint of the processor.
     \label{tab:bubblesort_pnr_report}
 \end{table}
 
+This design required a larger number of LUTs than 
+\texttt{softwareblink}, increasing from 1\,965 to 2\,344, 
+as the processor executes a more instruction-heavy and 
+branching-intensive routine. 
+However, the number of flip-flops, RAM blocks, 
+and carry-chain elements remained constant. 
+This suggests that the core hardware logic is unchanged, 
+and the increase in combinational logic reflects 
+the execution of a more complex program 
+rather than architectural modifications.
 
 \section{Conclusion and Future Work}
 \label{sec:Conclusion_and_Future_Work}
