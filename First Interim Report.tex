@@ -90,32 +90,76 @@
 
 \section{Introduction}
 \label{sec:Introduction}
+% This section should give a quick overview of the team’s task as a whole
 
 This project involves the collaborative design and implementation 
 of a RISC-V processor on an iCE40 FPGA platform. 
-The aim is to optimise the processor with regard to its
+The overarching aim is to optimise 
+the processor design with respect to its 
 performance, power dissipation, and resource usage, 
-while balancing the trade-offs between the three aspects. 
-It is a group project with each member responsible 
-for a different aspect of the design.
+while balancing trade-offs between these three aspects. 
+Each team member is responsible for focusing on one of the three aspects.
 
-This report presents the results from the initial baseline characterisation phase, 
-where the reference implementation of the processor is analysed. 
-The team worked collectively to gather measurements on the
-performance, power dissipation, and resource utilisation. 
-This report focuses primarily on the processor's resource usage.
+This interim report focuses on the initial characterisation of the baseline design. 
+We are evaluating three provided example programs - 
+\texttt{hardwareblink}, \texttt{softwareblink}, and \texttt{bubblesort} - 
+to establish benchmarks for the logic usage, power dissipation and timing. 
+These programs exercise the processor and surrounding hardware to varying degrees, 
+and provide a foundation against which future design improvements can be compared.
 
 
 \section{Project Specification}
 \label{sec:Project_Specification}
+%This section should provide an overview of your specific
+%task as part of the team.
+
+Within the team, my specific task focuses on 
+optimising the resource usage of the FPGA implementation. 
+The goal of this optimisation is to reduce the number of 
+Look-Up Tables (LUTs), flip-flops, and wires used in the design. 
+This allows more headroom on the device for future expansions 
+and increases the scalability of the design.
+
+LUTs, flip-flops, and routing wires are 
+the fundamental building blocks of digital logic in an FPGA. 
+A LUT is a configurable logic element that can implement 
+arbitrary combinational logic functions 
+by storing precomputed outputs for each possible input combination. 
+Flip-flops are used to store single bits of state and 
+are essential for implementing sequential logic, 
+such as registers and control signals. 
+Routing wires connect LUTs and flip-flops together, 
+allowing signals to propagate through the design. 
+The quantity and efficiency of these elements directly impact 
+how much logic the FPGA can implement and how complex the system can be.
+
+For this interim report, the goal is not to 
+change the programs or optimise the device yet.
+This report only characterises the resource usage of the three programs.
+
 
 \section{Summary of Preliminary Design Work}
 \label{sec:Summary_of_Preliminary_Design_Work}
+
+
+\subsection{Hardwareblink}
+\label{sec:Hardwareblink}
+
+The first of these programs is the \texttt{hardwareblink} program,
+which causes \textit{LED D14} to blink at a rate of 1Hz. 
+This is acheived by ...
+
+\subsection{Softwareblink}
+\label{sec:Softwareblink}
+
+\subsection{Bubblesort}
+\label{sec:Bubblesort}
 
 \section{Conclusion and Future Work}
 \label{sec:Conclusion_and_Future_Work}
 
 \appendix
 \section{Appendix}
+%Use this section to include diagrams, Verilog or C code, etc
 
 \end{document}
