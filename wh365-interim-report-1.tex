@@ -120,7 +120,7 @@ and provide a foundation against which future design improvements can be compare
 Within the team, my specific task focuses on 
 optimising the resource usage of the FPGA implementation. 
 The goal of this optimisation is to reduce the number of 
-Look-Up Tables (LUTs), flip-flops, and wires used in the design. 
+Look-Up Tables (LUTs), flip-flops, and logic elements used in the design. 
 This allows more headroom on the device for future expansions 
 and increases the scalability of the design.
 
@@ -157,13 +157,14 @@ and place-and-route was performed using \texttt{nextpnr}.
 
 The first program evaluated was \texttt{hardwareblink}.
 This example does not use the RISC-V processor core and 
-instead relies purely on combinational and sequential logic defined in Verilog.
+instead relies purely on combinational and 
+sequential logic defined in \texttt{Verilog}.
 
 This program implements a simple hardware-only design that 
 toggles \textit{LED D14} at 1\,Hz using a counter. 
 In order to toggle the LED at 1\,Hz, 
 \texttt{hardwareblink} makes use of the 48\,MHz \textit{HFOSC},
-and divides it by 24,000,000 in a counter.
+and divides it by 24\,000\,000 in a counter.
 This output toggles a register, 
 the value of which is mapped to pin \textit{D3} (driving \textit{LED D14}),
 giving rise to a 1\,Hz blinking light.
@@ -218,7 +219,7 @@ with the results shown in Table \ref{tab:hardware_pnr_report}.
 
 This report shows that only 103 logic cells were used on the FPGA fabric, 
 corresponding to approximately 2\% of the available 5280 logic cells 
-on the iCE40 UP5K device.
+on the device.
 
 
 No block RAMs, memories, or processor logic were involved in this design, 
