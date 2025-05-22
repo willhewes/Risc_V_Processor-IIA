@@ -25,9 +25,12 @@
 \usepackage{xcolor}
 \usepackage{textcomp}
 \usepackage{tabularx}
+\usepackage{array}
 \usepackage{changepage}
 \usepackage{tikz}
 \usetikzlibrary{shapes.geometric, arrows}
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+
 
 \lstdefinestyle{vhdl-style}{
     language=VHDL,
@@ -99,8 +102,9 @@ the processor design with respect to its
 performance, power dissipation, and resource usage, 
 while balancing trade-offs between these three aspects. 
 Each team member is responsible for focusing on one of the three aspects.
+This report will focus on the resource usage of the design.
 
-This interim report focuses on the initial characterisation of the baseline design. 
+This interim report characterises the baseline design. 
 We are evaluating three provided example programs - 
 \texttt{hardwareblink}, \texttt{softwareblink}, and \texttt{bubblesort} - 
 to establish benchmarks for the logic usage, power dissipation and timing. 
@@ -141,13 +145,77 @@ This report only characterises the resource usage of the three programs.
 \section{Summary of Preliminary Design Work}
 \label{sec:Summary_of_Preliminary_Design_Work}
 
+To assess the resource usage of each of the three programs, 
+the designs were synthesised using \texttt{yosys} 
+and place-and-route was performed using \texttt{nextpnr}. 
 
 \subsection{Hardwareblink}
 \label{sec:Hardwareblink}
 
-The first of these programs is the \texttt{hardwareblink} program,
-which causes \textit{LED D14} to blink at a rate of 1Hz. 
-This is acheived by ...
+The first program evaluated was \texttt{hardwareblink}.
+This example does not use the RISC-V processor core and 
+instead relies purely on combinational and sequential logic defined in Verilog.
+
+This program implements a simple hardware-only design that 
+toggles \textit{LED D14} at 1\,Hz using a counter. 
+In order to toggle the LED at 1\,Hz, 
+\texttt{hardwareblink} makes use of the 48\,MHz \textit{HFOSC},
+and divides it by 24,000,000 in a counter.
+This output toggles a register, 
+the value of which is mapped to pin \textit{D3} (driving \textit{LED D14}),
+giving rise to a 1\,Hz blinking light.
+
+The summary of the resulting logic utilisation is shown
+in Table \ref{tab:hardware_yosys_report} below.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Component} & \textbf{Count} \\
+        \hline
+        \texttt{SB\_LUT4} cells (LUTs) & 65 \\
+        \texttt{SB\_DFFSR} flip-flops (with set/reset) & 32 \\
+        \texttt{SB\_CARRY} cells (carry chain logic for the counter) & 61 \\
+        \texttt{SB\_DFFE} (used to store the LED state) & 1 \\
+        \texttt{SB\_HFOSC} high-frequency oscillator (48\,MHz) & 1 \\
+        \hline
+    \end{tabular}
+    \caption{Breakdown of FPGA primitives used in the design}
+    \label{tab:hardware_yosys_report}
+\end{table}
+
+Corresponding to 160 cells in total.
+
+Subsequently, \texttt{nextpnr} was used to place and route these logic cells,
+with the results shown in Table \ref{tab:hardware_pnr_report}.
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{0.7\textwidth}{X c c}
+        \toprule
+        Resource type & Used & \% of UP5K total \\ \midrule
+        Logic cells (\texttt{ICESTORM\_LC}) & 103 / 5\,280 & 1.9\,\% \\
+        Block RAMs    (\texttt{ICESTORM\_RAM}) & 0 / 30 & 0\,\% \\
+        IO buffers    (\texttt{SB\_IO})         & 1 / 96 & 1.0\,\% \\
+        Global buffers(\texttt{SB\_GB})         & 2 / 8  & 25\,\% \\
+        HF oscillators(\texttt{SB\_HFOSC})      & 1 / 1  & 100\,\% \\ \bottomrule
+    \end{tabularx}
+    \caption{Place-and-route logic utilisation reported by \texttt{nextpnr}}
+    \label{tab:hardware_pnr_report}
+\end{table}
+
+This report shows that only 103 logic cells were used on the FPGA fabric, 
+corresponding to approximately 2\% of the available 5280 logic cells 
+on the iCE40 UP5K device.
+
+
+No block RAMs, memories, or processor logic were involved in this design, 
+making it a minimal baseline for comparison. 
+The low utilisation confirms the simplicity of the circuit 
+and provides a reference point for understanding 
+how resource usage increases with more complex processor-driven programs.
+
 
 \subsection{Softwareblink}
 \label{sec:Softwareblink}
