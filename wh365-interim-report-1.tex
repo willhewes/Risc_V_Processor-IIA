@@ -123,7 +123,7 @@ Look-Up Tables (LUTs), flip-flops, and logic elements used in the design.
 This allows more headroom on the device for future expansions 
 and increases its scalability.
 
-LUTs, flip-flops, and other logic elements are 
+LUTs and flip-flops are some of
 the fundamental building blocks of digital logic in an FPGA. 
 A LUT is a configurable logic element that can implement 
 arbitrary combinational logic functions 
@@ -134,10 +134,20 @@ such as registers and control signals.
 The quantity and efficiency of these elements directly impact 
 how much logic the FPGA can implement and how complex the system can be.
 
+Optimising resource usage means reducing 
+how many of these elements a design uses.
+By simplifying logic paths, reusing hardware blocks,
+or packing multiple functions into fewer LUTs and flip-flops,
+space can be freed up on the FPGA.
+This can come at the cost of slower computational speeds
+or increased power dissipation depending on how these changes are implemented.
+This represents the crux of the project,
+and future reports will aim to balance these constraints with each other.
+
 For this interim report, the goal is not to 
 change the programs or optimise the device yet.
-This report only characterises the resource usage of the three programs.
-
+This report only characterises the resource usage of the three programs,
+providing a basis for analysing resource usage in future designs.
 
 \section{Summary of Preliminary Design Work}
 \label{sec:Summary_of_Preliminary_Design_Work}
@@ -200,13 +210,6 @@ This introduces a significant increase in logic complexity,
 as instruction decoding, arithmetic, control logic, and memory access logic 
 are all active.
 
-\iffalse
-To synthesise this design, \texttt{softwareblink.c} was compiled 
-using the RISC-V GCC toolchain into \texttt{program.hex} and \texttt{data.hex}, 
-which were then loaded into the processor design 
-before synthesis using \texttt{yosys} and place-and-route using \texttt{nextpnr}.
-\fi
-
 Table \ref{tab:software_yosys_report} in the Appendix 
 shows the breakdown of primitive cell usage 
 as reported by \texttt{yosys} after synthesis.
@@ -250,12 +253,6 @@ and memory access capabilities of the RISC-V core.
 This makes it a more demanding benchmark for 
 evaluating resource utilisation.
 
-\iffalse
-As with the previous example, 
-\texttt{bubblesort.c} was compiled into 
-\texttt{program.hex} and \texttt{data.hex}, 
-which were loaded into the processor before synthesis. 
-\fi
 Table \ref{tab:bubblesort_yosys_report} in the Appendix
 shows the resulting breakdown of 
 primitive cells as reported by \texttt{yosys},
