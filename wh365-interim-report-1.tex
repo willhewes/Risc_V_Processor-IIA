@@ -121,23 +121,7 @@ optimising the resource usage of the FPGA implementation.
 The goal of this optimisation is to reduce the number of 
 Look-Up Tables (LUTs), flip-flops, and logic elements used in the design. 
 This allows more headroom on the device for future expansions 
-and increases the scalability of the design.
-
-
-\iffalse
-LUTs, flip-flops, and routing wires are 
-the fundamental building blocks of digital logic in an FPGA. 
-A LUT is a configurable logic element that can implement 
-arbitrary combinational logic functions 
-by storing precomputed outputs for each possible input combination. 
-Flip-flops are used to store single bits of state and 
-are essential for implementing sequential logic, 
-such as registers and control signals. 
-Routing wires connect LUTs and flip-flops together, 
-allowing signals to propagate through the design. 
-The quantity and efficiency of these elements directly impact 
-how much logic the FPGA can implement and how complex the system can be.
-\fi
+and increases its scalability.
 
 For this interim report, the goal is not to 
 change the programs or optimise the device yet.
@@ -201,9 +185,9 @@ with the results shown in Table \ref{tab:hardware_pnr_report}.
 
 \begin{table}[H]
     \centering
-    \begin{tabularx}{0.7\textwidth}{X c c}
+    \begin{tabularx}{0.6\textwidth}{X c c}
         \toprule
-        Resource type & Used & \% of UP5K total \\ \midrule
+        Resource type & Used & \% of total \\ \midrule
         Logic cells (\texttt{ICESTORM\_LC}) & 103 / 5\,280 & 1.9\,\% \\
         Block RAMs (\texttt{ICESTORM\_RAM}) & 0 / 30 & 0\,\% \\
         IO buffers (\texttt{SB\_IO}) & 1 / 96 & 1.0\,\% \\
@@ -241,10 +225,12 @@ This introduces a significant increase in logic complexity,
 as instruction decoding, arithmetic, control logic, and memory access logic 
 are all active.
 
+\iffalse
 To synthesise this design, \texttt{softwareblink.c} was compiled 
 using the RISC-V GCC toolchain into \texttt{program.hex} and \texttt{data.hex}, 
 which were then loaded into the processor design 
 before synthesis using \texttt{yosys} and place-and-route using \texttt{nextpnr}.
+\fi
 
 Table \ref{tab:software_yosys_report} shows the breakdown of primitive cell usage 
 as reported by \texttt{yosys} after synthesis.
@@ -279,9 +265,9 @@ relative to \texttt{hardwareblink}.
 
 \begin{table}[H]
     \centering
-    \begin{tabularx}{0.7\textwidth}{X c c}
+    \begin{tabularx}{0.6\textwidth}{X c c}
         \toprule
-        Resource type & Used & \% of UP5K total \\ \midrule
+        Resource type & Used & \% of total \\ \midrule
         Logic cells (\texttt{ICESTORM\_LC}) & 2662 / 5280 & 50\,\% \\
         Block RAMs (\texttt{ICESTORM\_RAM})& 20 / 30 & 66\,\% \\
         IO buffers (\texttt{SB\_IO}) & 8 / 96 & 8\,\% \\
@@ -350,9 +336,9 @@ The corresponding place-and-route results reported by
 
 \begin{table}[H]
     \centering
-    \begin{tabularx}{0.7\textwidth}{X c c}
+    \begin{tabularx}{0.6\textwidth}{X c c}
         \toprule
-        Resource type & Used & \% of UP5K total \\ \midrule
+        Resource type & Used & \% of total \\ \midrule
         Logic cells (\texttt{ICESTORM\_LC}) & 3073 / 5280 & 58\,\% \\
         Block RAMs (\texttt{ICESTORM\_RAM}) & 20 / 30 & 66\,\% \\
         IO buffers (\texttt{SB\_IO}) & 8 / 96 & 8\,\% \\
