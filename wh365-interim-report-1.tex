@@ -123,6 +123,19 @@ Look-Up Tables (LUTs), flip-flops, and logic elements used in the design.
 This allows more headroom on the device for future expansions 
 and increases its scalability.
 
+LUTs, flip-flops, and routing wires are 
+the fundamental building blocks of digital logic in an FPGA. 
+A LUT is a configurable logic element that can implement 
+arbitrary combinational logic functions 
+by storing precomputed outputs for each possible input combination. 
+Flip-flops are used to store single bits of state and 
+are essential for implementing sequential logic, 
+such as registers and control signals. 
+Routing wires connect LUTs and flip-flops together, 
+allowing signals to propagate through the design. 
+The quantity and efficiency of these elements directly impact 
+how much logic the FPGA can implement and how complex the system can be.
+
 For this interim report, the goal is not to 
 change the programs or optimise the device yet.
 This report only characterises the resource usage of the three programs.
@@ -151,59 +164,21 @@ and divides it by 24\,000\,000 in a counter.
 This output toggles a register, 
 the value of which is mapped to pin \textit{D3} (driving \textit{LED D14}),
 giving rise to a 1\,Hz blinking light.
-
 The summary of the resulting logic utilisation is shown
-in Table \ref{tab:hardware_yosys_report} below.
+in Table \ref{tab:hardware_yosys_report} in the Appendix.
 
-\begin{table}[H]
-    \centering
-    \begin{tabular}{|l|c|}
-        \hline
-        \textbf{Primitive} & \textbf{Count} \\
-        \hline
-        \texttt{SB\_LUT4} logic cells (combinational) & 65 \\
-        \texttt{SB\_DFF} flip-flops & 0 \\
-        \texttt{SB\_DFFE} flip-flops with clock enable & 1 \\
-        \texttt{SB\_DFFSR} flip-flops with set/reset & 32 \\
-        \texttt{SB\_DFFSS} flip-flops with set/set & 0 \\
-        \texttt{SB\_CARRY} carry-chain elements & 61 \\
-        \texttt{SB\_RAM40\_4K} block RAMs & 0 \\
-        \texttt{SB\_HFOSC} internal oscillator & 1 \\
-        \hline
-    \end{tabular}
-    \caption{Primitive cell usage reported by 
-    \texttt{yosys} for the \texttt{hardwareblink} design}
-    \label{tab:hardware_yosys_report}
-\end{table}
-
-
-
-Corresponding to 160 cells in total.
+The design uses 33 flip-flops,
+61 carry-chain elements,
+65 combinational logic cells,
+the high frequency clock,
+and no block RAMs.
+This corresponds to 160 cells in total.
 
 Subsequently, \texttt{nextpnr} was used to place and route these logic cells,
-with the results shown in Table \ref{tab:hardware_pnr_report}.
-
-\begin{table}[H]
-    \centering
-    \begin{tabularx}{0.6\textwidth}{X c c}
-        \toprule
-        Resource type & Used & \% of total \\ \midrule
-        Logic cells (\texttt{ICESTORM\_LC}) & 103 / 5\,280 & 1.9\,\% \\
-        Block RAMs (\texttt{ICESTORM\_RAM}) & 0 / 30 & 0\,\% \\
-        IO buffers (\texttt{SB\_IO}) & 1 / 96 & 1.0\,\% \\
-        Global buffers (\texttt{SB\_GB}) & 2 / 8  & 25\,\% \\
-        HF oscillators (\texttt{SB\_HFOSC}) & 1 / 1  & 100\,\% \\ 
-    \bottomrule
-    \end{tabularx}
-    \caption{Place-and-route logic utilisation reported by 
-    \texttt{nextpnr} for \texttt{hardwareblink}}
-    \label{tab:hardware_pnr_report}
-\end{table}
-
+with the results shown in Table \ref{tab:hardware_pnr_report} in the Appendix.
 This report shows that only 103 logic cells were used on the FPGA fabric, 
 corresponding to approximately 2\% of the available 5280 logic cells 
 on the device.
-
 
 No block RAMs, memories, or processor logic were involved in this design, 
 making it a minimal baseline for comparison. 
@@ -225,60 +200,33 @@ This introduces a significant increase in logic complexity,
 as instruction decoding, arithmetic, control logic, and memory access logic 
 are all active.
 
-\iffalse
 To synthesise this design, \texttt{softwareblink.c} was compiled 
 using the RISC-V GCC toolchain into \texttt{program.hex} and \texttt{data.hex}, 
 which were then loaded into the processor design 
 before synthesis using \texttt{yosys} and place-and-route using \texttt{nextpnr}.
-\fi
 
-Table \ref{tab:software_yosys_report} shows the breakdown of primitive cell usage 
+Table \ref{tab:software_yosys_report} in the Appendix 
+shows the breakdown of primitive cell usage 
 as reported by \texttt{yosys} after synthesis.
 
-\begin{table}[H]
-    \centering
-    \begin{tabular}{|l|c|}
-        \hline
-        \textbf{Primitive} & \textbf{Count} \\
-        \hline
-        \texttt{SB\_LUT4} logic cells (combinational) & 1\,965 \\
-        \texttt{SB\_DFF} flip-flops & 415 \\
-        \texttt{SB\_DFFE} flip-flops with clock enable & 154 \\
-        \texttt{SB\_DFFSR} flip-flops with set/reset & 100 \\
-        \texttt{SB\_DFFSS} flip-flops with set/set & 4 \\
-        \texttt{SB\_CARRY} carry-chain elements & 216 \\
-        \texttt{SB\_RAM40\_4K} block RAMs & 20 \\
-        \texttt{SB\_HFOSC} internal oscillator & 1 \\
-        \hline
-    \end{tabular}
-    \caption{Primitive cell usage reported by 
-    \texttt{yosys} for the \texttt{softwareblink} processor design}
-    \label{tab:software_yosys_report}
-\end{table}
+The design uses 673 flip-flops,
+61 carry-chain elements,
+1965 combinational logic cells,
+the high frequency clock,
+and 20 block RAMs.
+This corresponds to 2878 cells in total.
 
-Table \ref{tab:software_pnr_report} shows the corresponding logic usage 
+Evidently this software design uses far more logic elements
+than the previous hardware design,
+requiring a significant portion of the total RAM capacity of the device.
+
+Table \ref{tab:software_pnr_report} in the Appendix
+shows the corresponding logic usage 
 on the FPGA fabric as reported by \texttt{nextpnr}. 
 This design consumes 50\% of the device's logic cell resources 
 and two-thirds of its available block RAMs, 
 representing a substantial increase in resource usage 
 relative to \texttt{hardwareblink}.
-
-\begin{table}[H]
-    \centering
-    \begin{tabularx}{0.6\textwidth}{X c c}
-        \toprule
-        Resource type & Used & \% of total \\ \midrule
-        Logic cells (\texttt{ICESTORM\_LC}) & 2662 / 5280 & 50\,\% \\
-        Block RAMs (\texttt{ICESTORM\_RAM})& 20 / 30 & 66\,\% \\
-        IO buffers (\texttt{SB\_IO}) & 8 / 96 & 8\,\% \\
-        Global buffers (\texttt{SB\_GB}) & 5 / 8 & 62\,\% \\
-        HF oscillators (\texttt{ICESTORM\_HFOSC}) & 1 / 1 & 100\,\% \\
-        \bottomrule
-    \end{tabularx}
-    \caption{Place-and-route logic utilisation reported by 
-    \texttt{nextpnr} for \texttt{softwareblink}}
-    \label{tab:software_pnr_report}
-\end{table}
 
 This evaluation establishes the baseline resource cost 
 of running programs on the processor. 
@@ -300,14 +248,111 @@ and memory access capabilities of the RISC-V core.
 This makes it a more demanding benchmark for 
 evaluating resource utilisation.
 
-\iffalse
 As with the previous example, 
 \texttt{bubblesort.c} was compiled into 
 \texttt{program.hex} and \texttt{data.hex}, 
 which were loaded into the processor before synthesis. 
-Table \ref{tab:bubblesort_yosys_report} shows the resulting breakdown of 
-primitive cells as reported by \texttt{yosys}.
-\fi
+Table \ref{tab:bubblesort_yosys_report} in the Appendix
+shows the resulting breakdown of 
+primitive cells as reported by \texttt{yosys},
+and the corresponding place-and-route results reported by 
+\texttt{nextpnr} are shown in 
+Table \ref{tab:bubblesort_pnr_report} in the Appendix.
+
+This design required a larger number of LUTs than 
+\texttt{softwareblink}, increasing from 1\,965 to 2\,344, 
+as the processor executes a more instruction-heavy and 
+branching-intensive routine. 
+However, the number of flip-flops, RAM blocks, 
+and carry-chain elements remained constant. 
+This suggests that the core hardware logic is unchanged, 
+and the increase in combinational logic reflects 
+the execution of a more complex program 
+rather than architectural modifications.
+
+\section{Conclusion and Future Work}
+\label{sec:Conclusion_and_Future_Work}
+
+\appendix
+\label{Appendix}
+\section{Resource Usage data}
+%Use this section to include diagrams, Verilog or C code, etc
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Primitive} & \textbf{Count} \\
+        \hline
+        \texttt{SB\_LUT4} logic cells (combinational) & 65 \\ %combinatorial / remove?
+        \texttt{SB\_DFF} flip-flops & 0 \\
+        \texttt{SB\_DFFE} flip-flops with clock enable & 1 \\
+        \texttt{SB\_DFFSR} flip-flops with set/reset & 32 \\
+        \texttt{SB\_DFFSS} flip-flops with set/set & 0 \\
+        \texttt{SB\_CARRY} carry-chain elements & 61 \\
+        \texttt{SB\_RAM40\_4K} block RAMs & 0 \\
+        \texttt{SB\_HFOSC} internal oscillator & 1 \\
+        \hline
+    \end{tabular}
+    \caption{Primitive cell usage reported by 
+    \texttt{yosys} for the \texttt{hardwareblink} design}
+    \label{tab:hardware_yosys_report}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{0.6\textwidth}{X c c}
+        \toprule
+        Resource type & Used & \% of total \\ \midrule
+        Logic cells (\texttt{ICESTORM\_LC}) & 103 / 5\,280 & 1.9\,\% \\
+        Block RAMs (\texttt{ICESTORM\_RAM}) & 0 / 30 & 0\,\% \\
+        IO buffers (\texttt{SB\_IO}) & 1 / 96 & 1.0\,\% \\
+        Global buffers (\texttt{SB\_GB}) & 2 / 8  & 25\,\% \\
+        HF oscillators (\texttt{SB\_HFOSC}) & 1 / 1  & 100\,\% \\ 
+    \bottomrule
+    \end{tabularx}
+    \caption{Place-and-route logic utilisation reported by 
+    \texttt{nextpnr} for \texttt{hardwareblink}}
+    \label{tab:hardware_pnr_report}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Primitive} & \textbf{Count} \\
+        \hline
+        \texttt{SB\_LUT4} logic cells (combinational) & 1\,965 \\
+        \texttt{SB\_DFF} flip-flops & 415 \\
+        \texttt{SB\_DFFE} flip-flops with clock enable & 154 \\
+        \texttt{SB\_DFFSR} flip-flops with set/reset & 100 \\
+        \texttt{SB\_DFFSS} flip-flops with set/set & 4 \\
+        \texttt{SB\_CARRY} carry-chain elements & 216 \\
+        \texttt{SB\_RAM40\_4K} block RAMs & 20 \\
+        \texttt{SB\_HFOSC} internal oscillator & 1 \\
+        \hline
+    \end{tabular}
+    \caption{Primitive cell usage reported by 
+    \texttt{yosys} for the \texttt{softwareblink} design}
+    \label{tab:software_yosys_report}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{0.6\textwidth}{X c c}
+        \toprule
+        Resource type & Used & \% of total \\ \midrule
+        Logic cells (\texttt{ICESTORM\_LC}) & 2662 / 5280 & 50\,\% \\
+        Block RAMs (\texttt{ICESTORM\_RAM})& 20 / 30 & 66\,\% \\
+        IO buffers (\texttt{SB\_IO}) & 8 / 96 & 8\,\% \\
+        Global buffers (\texttt{SB\_GB}) & 5 / 8 & 62\,\% \\
+        HF oscillators (\texttt{ICESTORM\_HFOSC}) & 1 / 1 & 100\,\% \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Place-and-route logic utilisation reported by 
+    \texttt{nextpnr} for \texttt{softwareblink}}
+    \label{tab:software_pnr_report}
+\end{table}
 
 \begin{table}[H]
     \centering
@@ -328,13 +373,9 @@ primitive cells as reported by \texttt{yosys}.
         \hline
     \end{tabular}
     \caption{Primitive cell usage reported by 
-    \texttt{yosys} for the \texttt{bubblesort} processor design}
+    \texttt{yosys} for the \texttt{bubblesort} design}
     \label{tab:bubblesort_yosys_report}
 \end{table}
-
-The corresponding place-and-route results reported by 
-\texttt{nextpnr} are shown in Table \ref{tab:bubblesort_pnr_report}.
-
 
 \begin{table}[H]
     \centering
@@ -352,23 +393,5 @@ The corresponding place-and-route results reported by
     \texttt{nextpnr} for \texttt{bubblesort}}
     \label{tab:bubblesort_pnr_report}
 \end{table}
-
-This design required a larger number of LUTs than 
-\texttt{softwareblink}, increasing from 1\,965 to 2\,344, 
-as the processor executes a more instruction-heavy and 
-branching-intensive routine. 
-However, the number of flip-flops, RAM blocks, 
-and carry-chain elements remained constant. 
-This suggests that the core hardware logic is unchanged, 
-and the increase in combinational logic reflects 
-the execution of a more complex program 
-rather than architectural modifications.
-
-\section{Conclusion and Future Work}
-\label{sec:Conclusion_and_Future_Work}
-
-\appendix
-\section{Appendix}
-%Use this section to include diagrams, Verilog or C code, etc
 
 \end{document}
