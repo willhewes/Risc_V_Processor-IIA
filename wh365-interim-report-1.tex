@@ -95,7 +95,7 @@
 % This section should give a quick overview of the team’s task as a whole
 
 This project involves the collaborative design and implementation 
-of a RISC-V processor on an iCE40 FPGA platform. 
+of a RISC-V processor on an iCE40 FPGA device. 
 The overarching aim is to optimise 
 the processor design with respect to its 
 performance, power dissipation, and resource usage, 
@@ -108,7 +108,7 @@ We are evaluating three provided example programs -
 \texttt{hardwareblink}, \texttt{softwareblink}, and \texttt{bubblesort} - 
 to establish benchmarks for the logic usage, power dissipation and timing. 
 These programs utilise the processor and surrounding hardware to varying degrees, 
-and provide a foundation against which future design improvements can be compared.
+and provide a baseline against which future design improvements can be compared.
 
 
 \section{Project Specification}
@@ -123,7 +123,7 @@ Look-Up Tables (LUTs), flip-flops, and logic elements used in the design.
 This allows more headroom on the device for future expansions 
 and increases its scalability.
 
-LUTs, flip-flops, and routing wires are 
+LUTs, flip-flops, and other logic elements are 
 the fundamental building blocks of digital logic in an FPGA. 
 A LUT is a configurable logic element that can implement 
 arbitrary combinational logic functions 
@@ -131,8 +131,6 @@ by storing precomputed outputs for each possible input combination.
 Flip-flops are used to store single bits of state and 
 are essential for implementing sequential logic, 
 such as registers and control signals. 
-Routing wires connect LUTs and flip-flops together, 
-allowing signals to propagate through the design. 
 The quantity and efficiency of these elements directly impact 
 how much logic the FPGA can implement and how complex the system can be.
 
@@ -148,6 +146,9 @@ To assess the resource usage of each of the three programs,
 the designs were synthesised using \texttt{yosys} 
 and place-and-route was performed using \texttt{nextpnr}. 
 
+The resulting resource usage reports of these processes 
+are displayed in the Appendix.
+
 \subsection{Hardwareblink}
 \label{sec:Hardwareblink}
 
@@ -156,7 +157,7 @@ This example does not use the RISC-V processor core and
 instead relies purely on combinational and 
 sequential logic defined in \texttt{Verilog}.
 
-This program implements a simple hardware-only design that 
+The program implements a simple hardware-only design that 
 toggles \textit{LED D14} at 1\,Hz using a counter. 
 In order to toggle the LED at 1\,Hz, 
 \texttt{hardwareblink} makes use of the 48\,MHz \textit{HFOSC},
@@ -176,7 +177,7 @@ This corresponds to 160 cells in total.
 
 Subsequently, \texttt{nextpnr} was used to place and route these logic cells,
 with the results shown in Table \ref{tab:hardware_pnr_report} in the Appendix.
-This report shows that only 103 logic cells were used on the FPGA fabric, 
+This report shows that only 103 logic cells were used in this implementation, 
 corresponding to approximately 2\% of the available 5280 logic cells 
 on the device.
 
@@ -186,24 +187,25 @@ The low utilisation confirms the simplicity of the circuit
 and provides a reference point for understanding 
 how resource usage increases with more complex processor-driven programs.
 
-
 \subsection{Softwareblink}
 \label{sec:Softwareblink}
 
 The second program evaluated was \texttt{softwareblink}. 
 In contrast to \texttt{hardwareblink}, 
-this design makes use of the full RISC-V processor core 
-to execute a compiled C program that toggles \textit{LED D14} in software. 
+this design makes use of the RISC-V processor core 
+to execute a compiled C program that toggles \textit{LED D14} via software. 
 The program operates by writing to a memory-mapped I/O register at regular intervals, 
 with timing determined by a simple delay loop. 
 This introduces a significant increase in logic complexity, 
 as instruction decoding, arithmetic, control logic, and memory access logic 
 are all active.
 
+\iffalse
 To synthesise this design, \texttt{softwareblink.c} was compiled 
 using the RISC-V GCC toolchain into \texttt{program.hex} and \texttt{data.hex}, 
 which were then loaded into the processor design 
 before synthesis using \texttt{yosys} and place-and-route using \texttt{nextpnr}.
+\fi
 
 Table \ref{tab:software_yosys_report} in the Appendix 
 shows the breakdown of primitive cell usage 
@@ -222,8 +224,8 @@ requiring a significant portion of the total RAM capacity of the device.
 
 Table \ref{tab:software_pnr_report} in the Appendix
 shows the corresponding logic usage 
-on the FPGA fabric as reported by \texttt{nextpnr}. 
-This design consumes 50\% of the device's logic cell resources 
+on the FPGA as reported by \texttt{nextpnr}. 
+This design takes up 50\% of the device's logic cell resources 
 and two-thirds of its available block RAMs, 
 representing a substantial increase in resource usage 
 relative to \texttt{hardwareblink}.
@@ -248,10 +250,12 @@ and memory access capabilities of the RISC-V core.
 This makes it a more demanding benchmark for 
 evaluating resource utilisation.
 
+\iffalse
 As with the previous example, 
 \texttt{bubblesort.c} was compiled into 
 \texttt{program.hex} and \texttt{data.hex}, 
 which were loaded into the processor before synthesis. 
+\fi
 Table \ref{tab:bubblesort_yosys_report} in the Appendix
 shows the resulting breakdown of 
 primitive cells as reported by \texttt{yosys},
@@ -270,8 +274,42 @@ and the increase in combinational logic reflects
 the execution of a more complex program 
 rather than architectural modifications.
 
-\section{Conclusion and Future Work}
-\label{sec:Conclusion_and_Future_Work}
+\section{Future Work}
+\label{sec:Future_Work}
+
+Looking at the \texttt{yosys} and \texttt{nextpnr} reports 
+for the three baseline programs, it is clear that the primary constraints 
+placed on resource usage occur due to software complexity, 
+particularly in terms of block RAM and logic cell utilisation.
+
+In order to optimise resource usage, 
+the focus will be on reducing logic complexity introduced by 
+processor control and data path operations. 
+This may involve simplifying instruction decode logic, 
+trimming unused ISA features, or removing pipeline stages where appropriate. 
+Where feasible, simpler control schemes that mirror the low-overhead structure of 
+\texttt{hardwareblink} will be adopted. 
+These changes should reduce the number of LUTs required, 
+primarily by reducing the amount of combinational logic needed for control flow, 
+arithmetic, and memory interfacing.
+
+\section{Conclusion}
+\label{sec:Conclusion}
+
+A baseline characteristic for the resource usage has been determined.
+Looking at the outputs of the synthesis and place-and-route reports,
+the primary reason for greater resource usage comes down to
+the software complexity applied to the FPGA.
+
+The \texttt{hardwareblink} program had the lowest resource usage,
+relying on no block RAM and lower quantities of logic cells.
+It acheived this by avoiding the use of the RISC-V processor entirely, 
+instead implementing the desired functionality directly in Verilog 
+as a simple counter and output toggle. 
+In contrast, both \texttt{softwareblink} and \texttt{bubblesort} 
+introduced significantly more complexity due to 
+the demands of instruction execution, 
+memory access, and control logic. 
 
 \newpage
 \appendix
@@ -285,7 +323,7 @@ rather than architectural modifications.
         \hline
         \textbf{Primitive} & \textbf{Count} \\
         \hline
-        \texttt{SB\_LUT4} logic cells (combinational) & 65 \\ %combinatorial / remove?
+        \texttt{SB\_LUT4} logic cells & 65 \\
         \texttt{SB\_DFF} flip-flops & 0 \\
         \texttt{SB\_DFFE} flip-flops with clock enable & 1 \\
         \texttt{SB\_DFFSR} flip-flops with set/reset & 32 \\
@@ -323,7 +361,7 @@ rather than architectural modifications.
         \hline
         \textbf{Primitive} & \textbf{Count} \\
         \hline
-        \texttt{SB\_LUT4} logic cells (combinational) & 1\,965 \\
+        \texttt{SB\_LUT4} logic cells & 1\,965 \\
         \texttt{SB\_DFF} flip-flops & 415 \\
         \texttt{SB\_DFFE} flip-flops with clock enable & 154 \\
         \texttt{SB\_DFFSR} flip-flops with set/reset & 100 \\
@@ -361,7 +399,7 @@ rather than architectural modifications.
         \hline
         \textbf{Primitive} & \textbf{Count} \\
         \hline
-        \texttt{SB\_LUT4} logic cells (combinational) & 2\,344 \\
+        \texttt{SB\_LUT4} logic cells & 2\,344 \\
         \texttt{SB\_DFF} flip-flops & 415 \\
         \texttt{SB\_DFFE} flip-flops with clock enable & 154 \\
         \texttt{SB\_DFFSR} flip-flops with set/reset & 100 \\
