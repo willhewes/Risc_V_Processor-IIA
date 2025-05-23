@@ -142,7 +142,7 @@ space can be freed up on the FPGA.
 This can come at the cost of slower computational speeds
 or increased power dissipation depending on how these changes are implemented.
 This represents the crux of the project,
-and future reports will aim to balance these constraints with each other.
+and future reports will aim to balance these constraints against each other.
 
 For this interim report, the goal is not to 
 change the programs or optimise the device yet.
@@ -214,7 +214,7 @@ Table \ref{tab:software_yosys_report} in the Appendix
 shows the breakdown of primitive cell usage 
 as reported by \texttt{yosys} after synthesis.
 
-The design uses 673 flip-flops,
+The design uses 673 flip-flops (and three not shown in the report),
 61 carry-chain elements,
 1965 combinational logic cells,
 the high frequency clock,
@@ -282,8 +282,10 @@ particularly in terms of block RAM and logic cell utilisation.
 In order to optimise resource usage, 
 the focus will be on reducing logic complexity introduced by 
 processor control and data path operations. 
-This may involve simplifying instruction decode logic, 
-trimming unused ISA features, or removing pipeline stages where appropriate. 
+This may include combining pipeline registers where possible,
+removing support for unused instructions, 
+and relocating the general-purpose register file into a single block RAM
+to reduce flip-flop usage.
 Where feasible, simpler control schemes that mirror the low-overhead structure of 
 \texttt{hardwareblink} will be adopted. 
 These changes should reduce the number of LUTs required, 
@@ -299,14 +301,25 @@ the primary reason for greater resource usage comes down to
 the software complexity applied to the FPGA.
 
 The \texttt{hardwareblink} program had the lowest resource usage,
-relying on no block RAM and lower quantities of logic cells.
-It acheived this by avoiding the use of the RISC-V processor entirely, 
+relying on no block RAM and
+only taking up roughly 2\% of the available logic cells.
+It achieved this by avoiding the use of the RISC-V processor entirely, 
 instead implementing the desired functionality directly in Verilog 
 as a simple counter and output toggle. 
+
 In contrast, both \texttt{softwareblink} and \texttt{bubblesort} 
 introduced significantly more complexity due to 
 the demands of instruction execution, 
 memory access, and control logic. 
+These additional demands used over 50\% of the available logic cells 
+and took up two thirds of the available block RAM.
+
+In order to minimise the resource usage associated with FPGA implementations,
+future work will focus on optimising the processor microarchitecture.
+This includes combining pipeline registers where feasible, 
+and cutting down on unnecessary logic functions.
+Each change will be weighted against 
+the performance and power dissipation constraints.
 
 \newpage
 \appendix
@@ -401,8 +414,6 @@ memory access, and control logic.
         \texttt{SB\_DFFE} flip-flops with clock enable & 154 \\
         \texttt{SB\_DFFSR} flip-flops with set/reset & 100 \\
         \texttt{SB\_DFFSS} flip-flops with set/set & 4 \\
-        %\texttt{SB\_DFFESR} flip-flops with enable + set/reset & 2 \\
-        %\texttt{SB\_DFFN} negative edge flip-flop & 1 \\
         \texttt{SB\_CARRY} carry-chain elements & 216 \\
         \texttt{SB\_RAM40\_4K} block RAMs & 20 \\
         \texttt{SB\_HFOSC} internal oscillator & 1 \\
