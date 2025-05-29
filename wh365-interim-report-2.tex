@@ -129,9 +129,11 @@ with functional correctness verified via simulation against standard test progra
 
 \section{Preliminary Results}
 \label{sec:Preliminary_Results}
-% This section should provide an detailed quantitative information and results so far.
+% This section should provide detailed quantitative information and results so far.
 
-
+Having performed the baseline analysis in the previous interim report,
+the resource usage for the provided processor on the \texttt{bubblesort}
+algorithm is shown in the Appendix.
 
 \section{Potential Risks}
 \label{sec:Potential_Risks}
@@ -150,5 +152,22 @@ with functional correctness verified via simulation against standard test progra
 \label{Appendix}
 \section{Resource Usage Data}
 %Use this section to include diagrams, Verilog or C code, etc
+
+\begin{table}[H] 
+    \centering
+    \begin{tabularx}{0.6\textwidth}{X c c}
+        \toprule
+        Resource type & Used & \% of total \\ \midrule
+        Logic cells (\texttt{ICESTORM\_LC}) & 3073 / 5280 & 58\,\% \\
+        Block RAMs (\texttt{ICESTORM\_RAM}) & 20 / 30 & 66\,\% \\
+        IO buffers (\texttt{SB\_IO}) & 8 / 96 & 8\,\% \\
+        Global buffers (\texttt{SB\_GB}) & 5 / 8 & 62\,\% \\
+        HF oscillators (\texttt{ICESTORM\_HFOSC}) & 1 / 1 & 100\,\% \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Place-and-route logic utilisation reported by 
+    \texttt{nextpnr} for \texttt{bubblesort}}
+    \label{tab:bubblesort_pnr_report}
+\end{table}
 
 \end{document}
