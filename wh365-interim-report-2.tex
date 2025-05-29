@@ -130,7 +130,9 @@ with functional correctness verified via simulation against standard test progra
 
 \section{Preliminary Results}
 \label{sec:Preliminary_Results}
-% This section should provide detailed quantitative information and results so far.
+% This section should provide detailed quantitative information and results so far
+All tables provided will be in order of the changes that were made
+and displayed in the Appendix, alongside relevant code snippets.
 \subsection{Baseline}
 \label{sec:Baseline}
 
@@ -167,7 +169,7 @@ allowing the synthesiser to eliminate redundant logic paths.
 This change slightly reduces LUT usage without affecting functionality.
 
 The results of this can be seen in table 
-\ref{tab:bubblesort_pnr_report2} in the Appendix.
+\ref{tab:ALU_Control} in the Appendix.
 This resulted in a reduction of 7 LUTs compared to the baseline design.
 While modest, this improvement contributes to the cumulative reduction 
 in logic utilisation across the design and 
@@ -175,6 +177,29 @@ lays the groundwork for more impactful structural changes in downstream modules.
 
 \subsection{alu.v}
 \label{sec:alu.v}
+
+The next module that was amended was the ALU. 
+This is responsible for executing arithmetic, logic, 
+and comparison operations as directed by the control signals 
+generated in the decode stage and passed through the ALU Control module.
+
+In the original design, separate adder structures 
+were instantiated for ADD, SUB, and BEQ operations. 
+These were consolidated into a single DSP-optimised adder, 
+using control signals \texttt{is\_sub} and \texttt{b\_eff} to assign behaviour. 
+This allowed the synthesiser to map all arithmetic operations and 
+branch comparisons to one shared hardware block, reducing LUT usage 
+and enabling DSP inference.
+
+Further simplifications included streamlining shift operations 
+and centralising branch comparators, which reduced conditional duplication 
+and improved overall datapath clarity. 
+The results of this can be seen in 
+Table~\ref{tab:ALU_Control} in the Appendix. 
+This change resulted in a reduction of 
+14 logic cells compared to the previous design, 
+representing an improvement in logic efficiency
+with no corresponding drop in performance.
 
 \subsection{forwarding\_unit.v}
 \label{sec:forwarding_unit.v}
@@ -220,15 +245,33 @@ lays the groundwork for more impactful structural changes in downstream modules.
     \begin{tabularx}{0.6\textwidth}{X c c}
         \toprule
         Resource type & Used & \% of total \\ \midrule
-        Logic cells (\texttt{ICESTORM\_LC}) & 3073 / 5280 & 58\,\% \\
+        Logic cells (\texttt{ICESTORM\_LC}) & 3066 / 5280 & 57\,\% \\
         Block RAMs (\texttt{ICESTORM\_RAM}) & 20 / 30 & 66\,\% \\
         IO buffers (\texttt{SB\_IO}) & 8 / 96 & 8\,\% \\
         Global buffers (\texttt{SB\_GB}) & 5 / 8 & 62\,\% \\
         HF oscillators (\texttt{ICESTORM\_HFOSC}) & 1 / 1 & 100\,\% \\
         \bottomrule
     \end{tabularx}
-    \caption{Report after ... make to ...}
-    \label{tab:bubblesort_pnr_report2}
+    \caption{Report after modifying the ALU Control module
+    to eliminate duplicated logic functions}
+    \label{tab:ALU_Control}
+\end{table}
+
+\begin{table}[H] 
+    \centering
+    \begin{tabularx}{0.6\textwidth}{X c c}
+        \toprule
+        Resource type & Used & \% of total \\ \midrule
+        Logic cells (\texttt{ICESTORM\_LC}) & 3052 / 5280 & 57\,\% \\
+        Block RAMs (\texttt{ICESTORM\_RAM}) & 20 / 30 & 66\,\% \\
+        IO buffers (\texttt{SB\_IO}) & 8 / 96 & 8\,\% \\
+        Global buffers (\texttt{SB\_GB}) & 5 / 8 & 62\,\% \\
+        HF oscillators (\texttt{ICESTORM\_HFOSC}) & 1 / 1 & 100\,\% \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Report after modifying the ALU Control module
+    to eliminate duplicated logic functions}
+    \label{tab:ALU}
 \end{table}
 
 \section{Code}
