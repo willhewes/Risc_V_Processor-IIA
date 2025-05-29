@@ -153,6 +153,26 @@ These observations guided the subsequent design changes detailed in this report.
 \subsection{alu\_control.v}
 \label{sec:alu_control.v}
 
+The first module that was ammended was the ALU control module.
+This is responsible for decoding instruction function codes into internal
+ALU operation signals during operation.
+
+The module initially had hardcoded ALU control values and function codes.
+This had the consequence of duplicating logic for operations 
+that were functionally equivalent but encoded separately. 
+By replacing these constants with symbolic defines from 
+\texttt{sail-core-defines.v}, 
+the design now groups equivalent operations under shared identifiers, 
+allowing the synthesiser to eliminate redundant logic paths. 
+This change slightly reduces LUT usage without affecting functionality.
+
+The results of this can be seen in table 
+\ref{tab:bubblesort_pnr_report2} in the Appendix.
+This resulted in a reduction of 7 LUTs compared to the baseline design.
+While modest, this improvement contributes to the cumulative reduction 
+in logic utilisation across the design and 
+lays the groundwork for more impactful structural changes in downstream modules.
+
 \subsection{alu.v}
 \label{sec:alu.v}
 
