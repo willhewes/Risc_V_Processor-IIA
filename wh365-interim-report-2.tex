@@ -136,18 +136,18 @@ with functional correctness verified via simulation against standard test progra
 
 Having performed the baseline analysis in the previous interim report,
 the resource usage for the provided processor on the \texttt{bubblesort}
-algorithm is shown in figure \ref{tab:baseline} the Appendix.
+algorithm is shown in table \ref{tab:baseline} the Appendix.
 
 In the baseline design, 
-synthesis of the unmodified processor design yielded 
-a logic utilisation of approximately 
-58\% of the available logic cells on the iCE40 UP5K. 
-This figure indicates limited headroom for further feature 
-integration or pipeline complexity, 
+synthesis of the unmodified processor design showed that approximately 
+58\% of the available logic cells on the iCE40 UP5K were in use,
+along with two third of the available Block RAMs. 
+This figure indicates limited headroom for 
+further feature integration or pipeline complexity, 
 motivating efforts to streamline key datapaths and control logic. 
-In particular, duplication in ALU operations, verbose forwarding logic, 
-and unnecessary pipeline toggling were identified 
-as significant contributors to LUT usage. 
+In particular, duplication in ALU operations, bloated forwarding logic, 
+and unnecessary pipeline register toggling were identified 
+as significant contributors to excessive logic usage. 
 These observations guided the subsequent design changes detailed in this report.
 
 \subsection{alu\_control.v}
