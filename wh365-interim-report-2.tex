@@ -130,10 +130,36 @@ with functional correctness verified via simulation against standard test progra
 \section{Preliminary Results}
 \label{sec:Preliminary_Results}
 % This section should provide detailed quantitative information and results so far.
+\subsection{Baseline}
+\label{sec:Baseline}
 
 Having performed the baseline analysis in the previous interim report,
 the resource usage for the provided processor on the \texttt{bubblesort}
 algorithm is shown in the Appendix.
+
+In the baseline design, 
+synthesis of the unmodified processor design yielded 
+a logic utilisation of approximately 
+58\% of the available logic cells on the iCE40 UP5K. 
+This figure indicates limited headroom for further feature 
+integration or pipeline complexity, 
+motivating efforts to streamline key datapaths and control logic. 
+In particular, duplication in ALU operations, verbose forwarding logic, 
+and unnecessary pipeline toggling were identified 
+as significant contributors to LUT usage. 
+These observations guided the subsequent design changes detailed in this report.
+
+\subsection{alu\_control.v}
+\label{sec:alu_control.v}
+
+\subsection{alu.v}
+\label{sec:alu.v}
+
+\subsection{forwarding\_unit.v}
+\label{sec:forwarding_unit.v}
+
+\subsection{cpu.v \& pipeline\_registers.v}
+\label{sec:cpu.v_and_pipeline_registers.v}
 
 \section{Potential Risks}
 \label{sec:Potential_Risks}
@@ -149,7 +175,6 @@ algorithm is shown in the Appendix.
 
 \newpage
 \appendix
-\label{Appendix}
 \section{Resource Usage Data}
 %Use this section to include diagrams, Verilog or C code, etc
 
@@ -165,9 +190,28 @@ algorithm is shown in the Appendix.
         HF oscillators (\texttt{ICESTORM\_HFOSC}) & 1 / 1 & 100\,\% \\
         \bottomrule
     \end{tabularx}
-    \caption{Place-and-route logic utilisation reported by 
-    \texttt{nextpnr} for \texttt{bubblesort}}
+    \caption{Baseline report}
     \label{tab:bubblesort_pnr_report}
 \end{table}
+
+\begin{table}[H] 
+    \centering
+    \begin{tabularx}{0.6\textwidth}{X c c}
+        \toprule
+        Resource type & Used & \% of total \\ \midrule
+        Logic cells (\texttt{ICESTORM\_LC}) & 3073 / 5280 & 58\,\% \\
+        Block RAMs (\texttt{ICESTORM\_RAM}) & 20 / 30 & 66\,\% \\
+        IO buffers (\texttt{SB\_IO}) & 8 / 96 & 8\,\% \\
+        Global buffers (\texttt{SB\_GB}) & 5 / 8 & 62\,\% \\
+        HF oscillators (\texttt{ICESTORM\_HFOSC}) & 1 / 1 & 100\,\% \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Report after ... make to ...}
+    \label{tab:bubblesort_pnr_report}
+\end{table}
+
+\section{Interim Report 1}
+\label{sec:{Interim_Report_1}}
+\includepdf[pages=3-]{Reports/wh365-interim-report-1.pdf}
 
 \end{document}
