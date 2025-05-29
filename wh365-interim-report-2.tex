@@ -155,7 +155,7 @@ These observations guided the subsequent design changes detailed in this report.
 \subsection{alu\_control.v}
 \label{sec:alu_control.v}
 
-The first module that was ammended was the ALU control module.
+The first module that was amended was the ALU control module.
 This is responsible for decoding instruction function codes into internal
 ALU operation signals during operation.
 
@@ -178,28 +178,27 @@ lays the groundwork for more impactful structural changes in downstream modules.
 \subsection{alu.v}
 \label{sec:alu.v}
 
-The next module that was ammended was the ALU. 
-This is responsible for executing arithmetic, logic, 
-and comparison operations as directed by the control signals 
-generated in the decode stage and passed through the ALU Control module.
+The next module that was amended was the ALU. 
+This is responsible for executing arithmetic, logical, 
+and comparison operations, as directed by control signals 
+generated in the decode stage and passed via the ALU Control module.
 
-In the original design, separate adder structures 
-were instantiated for ADD, SUB, and BEQ operations. 
-These were consolidated into a single DSP-optimised adder, 
-using control signals \texttt{is\_sub} and \texttt{b\_eff} to assign behaviour. 
-This allowed the synthesiser to map all arithmetic operations and 
-branch comparisons to one shared hardware block, reducing LUT usage 
-and enabling DSP inference.
+In the original design, separate adder structures were instantiated for 
+ADD, SUB, and BEQ operations, leading to duplicated hardware logic. 
+These were replaced with a unified DSP-optimised adder, controlled using the 
+\texttt{is\_sub} and \texttt{b\_eff} signals. 
+This enabled the synthesiser to map all arithmetic and 
+branch comparison operations onto a single shared block, 
+allowing DSP inference and freeing spare LUTs.
 
-Further simplifications included streamlining shift operations 
-and centralising branch comparators, which reduced conditional duplication 
-and improved overall datapath clarity. 
-The results of this can be seen in 
-Table~\ref{tab:ALU_Control} in the Appendix. 
-This change resulted in a reduction of 
-14 logic cells compared to the previous design, 
-representing an improvement in logic efficiency
-with no corresponding drop in performance.
+Additional simplifications included restructuring shift logic 
+and centralising branch comparators to remove conditional duplication 
+and streamline the datapath. 
+The results of this change are shown in 
+Table \ref{tab:ALU} in the Appendix, 
+resulting in a further reduction of 14 logic cells. 
+This represents a meaningful improvement in resource efficiency, 
+with no measurable impact on performance.
 
 \subsection{forwarding\_unit.v}
 \label{sec:forwarding_unit.v}
