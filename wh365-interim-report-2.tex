@@ -284,8 +284,39 @@ or long-term maintainability.
 \section{Future Work}
 \label{sec:Future_Work}
 
+Several opportunities remain for further resource optimisation. These include:
+
+\begin{itemize}[noitemsep]
+    \item Replacing multiplexer trees with generate blocks 
+    to reduce redundant logic.
+    \item Investigating reuse of pipeline 
+    forwarding comparators using shared logic.
+    \item Exploring the controlled use of DSP blocks for arithmetic operations.
+    \item Consolidating register file control paths to reduce control signal fanout.
+\end{itemize}
+
+Each of these changes will be assessed for impact on logic usage, timing closure, and compatibility with the existing control logic.
+
+
 \section{Conclusion}
 \label{sec:Conclusion}
+
+\section{Conclusion}
+\label{sec:Conclusion}
+
+This report outlines a series of logic and memory optimisations applied 
+to the baseline RISC-V processor design. 
+Through targeted changes - clock gating, CSR removal, 
+and control signal width trimming — 
+a cumulative reduction of 182 logic cells and 8 block RAMs was achieved 
+without degrading functionality. 
+These gains significantly improve the design's flexibility 
+for future performance or power-directed improvements.
+
+The most immediate modification that needs to be made
+will be shifting the adder operation over to DSP blocks,
+freeing up more LUTs, reducing routing congestion,
+and shortening the critical path through the execute stage.
 
 \newpage
 \appendix
