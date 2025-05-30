@@ -148,8 +148,10 @@ This figure indicates limited headroom for
 further feature integration or pipeline complexity, 
 motivating efforts to streamline key datapaths and control logic. 
 In particular, duplication in ALU operations, bloated forwarding logic, 
-and unnecessary pipeline register toggling were identified 
-as significant contributors to excessive logic usage. 
+and excess register usage were identified 
+as contributors to excessive logic usage. 
+Additionally, the design made no use of the available DSPs,
+instead implementing its adder functions through LUTs.
 These observations guided the subsequent design changes detailed in this report.
 
 \subsection{alu\_control.v}
