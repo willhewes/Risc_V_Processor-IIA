@@ -154,28 +154,30 @@ Additionally, the design made no use of the available DSPs,
 instead implementing its adder functions through LUTs.
 These observations guided the subsequent design changes detailed in this report.
 
-\subsection{alu\_control.v}
-\label{sec:alu_control.v}
+\subsection{Program Counter Clock Gating}
+\label{sec:Program_Counter_Clock_Gating}
 
-The first module that was amended was the ALU control module.
-This is responsible for decoding instruction function codes into internal
-ALU operation signals during operation.
+To reduce unnecessary switching activity in the control path, 
+support for gated updates to the program counter was introduced. 
+This involved modifying the program\_counter.v module 
+to accept a write\_enable signal, 
+allowing updates to be conditionally applied 
+only when pipeline progression is required. 
+The cpu.v module was updated accordingly to assert write\_enable 
+whenever the stall signal is low, 
+ensuring that the PC is held stable during pipeline stalls.
 
-The module initially had hardcoded ALU control values and function codes.
-This had the consequence of duplicating logic for operations 
-that were functionally equivalent but encoded separately. 
-By replacing these constants with symbolic defines from 
-\texttt{sail-core-defines.v}, 
-the design now groups equivalent operations under shared identifiers, 
-allowing the synthesiser to eliminate redundant logic paths. 
-This change slightly reduces LUT usage without affecting functionality.
-
-The results of this can be seen in table 
-\ref{tab:ALU_Control} in the Appendix.
-This resulted in a reduction of 7 LUTs compared to the baseline design.
-While modest, this improvement contributes to the cumulative reduction 
-in logic utilisation across the design and 
-lays the groundwork for more impactful structural changes in downstream modules.
+This change helps avoid logic toggling during idle or stalled cycles. 
+This primarily has implications toward the power consumption, 
+allowing the board to reduce unnecessary dynamic power dissipation 
+caused by repeated switching in the program counter logic during pipeline stalls. 
+The resource utilisation can be seen in 
+table \ref{tab:Program_Counter} in the Appendix,
+helping free up 9 logic cells.
+Although the impact on LUT usage is minimal, 
+this is part of a broader strategy to reduce switching 
+by selectively enabling pipeline register updates — 
+aligning with the power and resource optimisation goals of the project.
 
 \subsection{alu.v}
 \label{sec:alu.v}
