@@ -314,16 +314,15 @@ or long-term maintainability.
     \begin{tabularx}{0.6\textwidth}{X c c}
         \toprule
         Resource type & Used & \% of total \\ \midrule
-        Logic cells (\texttt{ICESTORM\_LC}) & 3066 / 5280 & 57\,\% \\
+        Logic cells (\texttt{ICESTORM\_LC}) & 3064 / 5280 & 57\,\% \\
         Block RAMs (\texttt{ICESTORM\_RAM}) & 20 / 30 & 66\,\% \\
         IO buffers (\texttt{SB\_IO}) & 8 / 96 & 8\,\% \\
         Global buffers (\texttt{SB\_GB}) & 5 / 8 & 62\,\% \\
         HF oscillators (\texttt{ICESTORM\_HFOSC}) & 1 / 1 & 100\,\% \\
         \bottomrule
     \end{tabularx}
-    \caption{Report after modifying the ALU Control module
-    to eliminate duplicated logic functions}
-    \label{tab:ALU_Control}
+    \caption{Report after adding clock gating to the Program Counter module}
+    \label{tab:Program_Counter}
 \end{table}
 
 \begin{table}[H] 
@@ -331,16 +330,31 @@ or long-term maintainability.
     \begin{tabularx}{0.6\textwidth}{X c c}
         \toprule
         Resource type & Used & \% of total \\ \midrule
-        Logic cells (\texttt{ICESTORM\_LC}) & 3052 / 5280 & 57\,\% \\
-        Block RAMs (\texttt{ICESTORM\_RAM}) & 20 / 30 & 66\,\% \\
+        Logic cells (\texttt{ICESTORM\_LC}) & 2905 / 5280 & 57\,\% \\
+        Block RAMs (\texttt{ICESTORM\_RAM}) & 12 / 30 & 66\,\% \\
         IO buffers (\texttt{SB\_IO}) & 8 / 96 & 8\,\% \\
         Global buffers (\texttt{SB\_GB}) & 5 / 8 & 62\,\% \\
         HF oscillators (\texttt{ICESTORM\_HFOSC}) & 1 / 1 & 100\,\% \\
         \bottomrule
     \end{tabularx}
-    \caption{Report after modifying the ALU Control module
-    to eliminate duplicated logic functions}
-    \label{tab:ALU}
+    \caption{Report after removing Control and Status Register (CSR) logic}
+    \label{tab:CSR}
+\end{table}
+
+\begin{table}[H] 
+    \centering
+    \begin{tabularx}{0.6\textwidth}{X c c}
+        \toprule
+        Resource type & Used & \% of total \\ \midrule
+        Logic cells (\texttt{ICESTORM\_LC}) & 2891 / 5280 & 57\,\% \\
+        Block RAMs (\texttt{ICESTORM\_RAM}) & 12 / 30 & 66\,\% \\
+        IO buffers (\texttt{SB\_IO}) & 8 / 96 & 8\,\% \\
+        Global buffers (\texttt{SB\_GB}) & 5 / 8 & 62\,\% \\
+        HF oscillators (\texttt{ICESTORM\_HFOSC}) & 1 / 1 & 100\,\% \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Report after removing unused control signal width}
+    \label{tab:Signal_Width}
 \end{table}
 
 \section{Code}
