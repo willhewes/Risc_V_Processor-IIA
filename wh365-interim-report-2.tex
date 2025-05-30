@@ -109,12 +109,9 @@ My reports will focus on the resource usage of the design.
 
 This report outlines the work carried out to reduce resource usage 
 in the RISC-V processor implementation. 
-My focus has been on optimising the Verilog modules 
-most critical to logic utilisation, 
-including the adder and program counter clock gating. 
 The goal has been to reduce the number of LUTs and flip-flops consumed
 by the processor while minimising 
-excessive power dissipation or performance degredation.
+excessive power dissipation or performance degradation.
 These modifications form part of a broader group effort targeting performance, 
 power consumption, and resource usage. 
 Coordination has been ongoing to ensure our changes are compatible and 
@@ -133,6 +130,8 @@ instead relying heavily on general-purpose LUTs for arithmetic operations.
 % This section should provide detailed quantitative information and results so far
 All tables provided will be in order of the changes that were made
 and displayed in the Appendix, alongside relevant code snippets.
+The total reduction in resource usage is 
+shown in table \ref{tab:modification_reductions}.
 \subsection{Baseline}
 \label{sec:Baseline}
 
@@ -253,15 +252,14 @@ While the changes implemented so far have improved logic utilisation
 without degrading performance significantly, several risks remain that could impact 
 the stability or scalability of the processor design.
 
-Firstly, although the use of DSP blocks in the ALU has significantly 
-reduced LUT usage, it introduces reliance on fixed hardware resources 
-that may become a bottleneck if additional DSP-mapped features are introduced. 
-Any further overuse of these blocks could limit parallelism or 
+Firstly, future attempts to offload arithmetic operations to DSP blocks 
+may reduce LUT usage, but will require careful mapping 
+to avoid bottlenecks or timing degradation. 
+Any overuse of these blocks could limit parallelism or 
 necessitate costly logic workarounds. 
-As the original design made use of no DSPs,
-it is reasonable to perform this shift.
+As of this stage, no DSP blocks are in use.
 
-The most signicant change to the implementation was the removal of CSR logic.
+The most significant change to the implementation was the removal of CSR logic.
 Though this has a very positive impact on the LUT usage and in particular
 on the reduction of block RAMs required in the design,
 it has implications with regard to 
@@ -293,6 +291,22 @@ or long-term maintainability.
 \appendix
 %Use this section to include diagrams, Verilog or C code, etc
 \section{Resource Usage Data}
+
+\begin{table}[H] 
+    \centering
+    \begin{tabularx}{0.6\textwidth}{X c c}
+        \toprule
+        Modification & LUTs & Block RAMs \\ \midrule
+        Baseline $\rightarrow$ PC Gating & $9$ & $0$ \\
+        PC Gating $\rightarrow$ CSR Removal & $159$ & $8$ \\
+        CSR Removal $\rightarrow$ Signal Width Fix & $14$ & $0$ \\ \midrule
+        \textbf{Total Reduction} & \textbf{$182$} & \textbf{$8$} \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Individual resource reductions following each modification}
+    \label{tab:modification_reductions}
+\end{table}
+
 
 \begin{table}[H] 
     \centering
