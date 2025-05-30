@@ -248,6 +248,40 @@ as it requires manually tracing signal usage across modules and pipeline stages.
 % potential risks you see going into the final week, 
 % and any steps you are taking to mitigate those risks.
 
+While the changes implemented so far have improved logic utilisation 
+without degrading performance significantly, several risks remain that could impact 
+the stability or scalability of the processor design.
+
+Firstly, although the use of DSP blocks in the ALU has significantly 
+reduced LUT usage, it introduces reliance on fixed hardware resources 
+that may become a bottleneck if additional DSP-mapped features are introduced. 
+Any further overuse of these blocks could limit parallelism or 
+necessitate costly logic workarounds. 
+As the original design made use of no DSPs,
+it is reasonable to perform this shift.
+
+The most signicant change to the implementation was the removal of CSR logic.
+Though this has a very positive impact on the LUT usage and in particular
+on the reduction of block RAMs required in the design,
+it has implications with regard to 
+future extensibility and system-level compatibility. 
+By removing CSR support, the processor is no longer capable of handling traps, 
+exceptions, or privileged control, which limits its applicability 
+in more complex applications such as real-time systems, operating systems, 
+or embedded environments requiring timer interrupts or performance monitoring. 
+Reintroducing CSR functionality in later stages would likely involve 
+re-adding significant logic and memory overhead, 
+potentially offsetting the current resource savings.
+
+Lastly, clock gating introduced in the pipeline registers assumes 
+correct stalling logic. If the stall signal is incorrectly asserted or delayed, 
+it could lead to data hazards, register inconsistencies, or pipeline deadlock. 
+This risk increases as the pipeline control logic becomes more intricate.
+
+Continued validation through simulation and synthesis will be necessary 
+to ensure that further optimisation efforts do not compromise correctness 
+or long-term maintainability.
+
 \section{Future Work}
 \label{sec:Future_Work}
 
