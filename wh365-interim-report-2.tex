@@ -98,11 +98,21 @@
 % you have implemented for your role on the team 
 % (power/energy, time, or resource efficiency).
 
+This project involves the collaborative design and implementation 
+of a RISC-V processor on an iCE40 FPGA device. 
+The overarching aim is to optimise 
+the processor design with respect to its 
+performance, power dissipation, and resource usage, 
+while balancing trade-offs between these three aspects. 
+Each team member is responsible for focusing on one of the three aspects.
+My reports will focus on the resource usage of the design.
+
 This report outlines the work carried out to reduce resource usage 
 in the RISC-V processor implementation. 
 My focus has been on optimising the Verilog modules 
-most critical to logic utilisation, including the adder and program counter logic. 
-The has has been to reduce the number of LUTs and flip-flops consumed
+most critical to logic utilisation, 
+including the adder and program counter clock gating. 
+The goal has been to reduce the number of LUTs and flip-flops consumed
 by the processor while minimising 
 excessive power dissipation or performance degredation.
 These modifications form part of a broader group effort targeting performance, 
@@ -115,18 +125,8 @@ The analysis has primarily been concerning the
 allowing the processor to be pushed further and 
 offering more representative resource utilisation patterns.
 Preliminary synthesis results indicated that the original design 
-made limited use of available DSP blocks, 
+made no use of available DSP blocks, 
 instead relying heavily on general-purpose LUTs for arithmetic operations.
-
-To address this, the adder was restructured to map explicitly 
-to the FPGA's DSP resources, freeing up LUTs and reducing logic congestion.
-Additionally, the program counter logic was simplified 
-by removing redundant operations and tightening the branching logic.
-These changes collectively led to a reduction in logic cell usage, 
-without strongly affecting other performance metrics.
-Post-implementation metrics were captured using Yosys and nextpnr, 
-with functional correctness verified via simulation against standard test programs.
-
 
 \section{Preliminary Results}
 \label{sec:Preliminary_Results}
