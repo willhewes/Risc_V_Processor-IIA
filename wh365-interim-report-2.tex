@@ -30,6 +30,11 @@
 \usepackage{pdfpages}
 \usetikzlibrary{shapes.geometric, arrows}
 \newcolumntype{Y}{>{\centering\arraybackslash}X}
+% Reduce spacing before and after \section
+\titlespacing{\section}{0pt}{1.0em}{0.5em}
+
+% Reduce spacing before and after \subsection
+\titlespacing{\subsection}{0pt}{0.8em}{0.3em}
 
 
 \lstdefinestyle{vhdl-style}{
@@ -63,7 +68,7 @@
 \setlength{\belowdisplayskip}{0.5em}
 \setlength{\abovedisplayshortskip}{0.5em}
 \setlength{\belowdisplayshortskip}{0.5em}
-% \setlist{topsep=0em, partopsep=0em, itemsep=0em, parsep=0em}
+\setlist{topsep=0em, partopsep=0em, itemsep=0em, parsep=0em}
 
 \graphicspath{{Images/}}
 
@@ -101,13 +106,13 @@
 This project involves the collaborative design and implementation 
 of a RISC-V processor on an iCE40 FPGA device. 
 The overarching aim is to optimise 
-the processor design with respect to its 
+the processor design with regard to its 
 performance, power dissipation, and resource usage, 
 while balancing trade-offs between these three aspects. 
 Each team member is responsible for focusing on one of the three aspects.
 My reports will focus on the resource usage of the design.
 
-This report outlines the work carried out to reduce resource usage 
+This report outlines the initial work carried out to reduce resource usage 
 in the RISC-V processor implementation. 
 The goal has been to reduce the number of LUTs and flip-flops consumed
 by the processor while minimising 
@@ -117,8 +122,9 @@ power consumption, and resource usage.
 Coordination has been ongoing to ensure our changes are compatible and 
 contribute towards a coherent final design.
 
-The analysis has primarily been concerning the
-\texttt{bubblesort} program due to its increased complexity,
+The analysis has concerned the
+\texttt{bubblesort} program due to its increased complexity
+relative to \texttt{hardwareblink} and \texttt{softwareblink},
 allowing the processor to be pushed further and 
 offering more representative resource utilisation patterns.
 Preliminary synthesis results indicated that the original design 
@@ -129,26 +135,27 @@ instead relying heavily on general-purpose LUTs for arithmetic operations.
 \label{sec:Preliminary_Results}
 % This section should provide detailed quantitative information and results so far
 All tables provided will be in order of the changes that were made
-and displayed in the Appendix, alongside relevant code snippets.
+and displayed in the Appendix.
 The total reduction in resource usage is 
-shown in table \ref{tab:modification_reductions}.
+shown in Table \ref{tab:modification_reductions}.
 \subsection{Baseline}
 \label{sec:Baseline}
 
 Having performed the baseline analysis in the previous interim report,
 the resource usage for the provided processor on the \texttt{bubblesort}
-algorithm is shown in table \ref{tab:baseline} the Appendix.
+algorithm is shown in Table \ref{tab:baseline} the Appendix.
 
 In the baseline design, 
 synthesis of the unmodified processor design showed that approximately 
 58\% of the available logic cells on the iCE40 UP5K were in use,
-along with two third of the available Block RAMs. 
+along with two thirds of the available Block RAMs. 
 This figure indicates limited headroom for 
 further feature integration or pipeline complexity, 
 motivating efforts to streamline key datapaths and control logic. 
-In particular, duplication in ALU operations, bloated forwarding logic, 
-and excess register usage were identified 
-as contributors to excessive logic usage. 
+In particular, excessive use of general-purpose logic for ALU operations and CSR registers, 
+along with unnecessarily wide control signal buses, 
+were identified as contributors to high logic utilisation. 
+Forwarding logic and arithmetic duplication remain areas for future optimisation.
 Additionally, the design made no use of the available DSPs,
 instead implementing its adder functions through LUTs.
 These observations guided the subsequent design changes detailed in this report.
@@ -167,16 +174,15 @@ whenever the stall signal is low,
 ensuring that the PC is held stable during pipeline stalls.
 
 This change helps avoid logic toggling during idle or stalled cycles. 
-This primarily has implications toward the power consumption, 
+This primarily has an impact on the power consumption, 
 allowing the board to reduce unnecessary dynamic power dissipation 
 caused by repeated switching in the program counter logic during pipeline stalls. 
 The resource utilisation can be seen in 
-table \ref{tab:Program_Counter} in the Appendix,
+Table \ref{tab:Program_Counter} in the Appendix,
 helping free up 9 logic cells.
 Although the impact on LUT usage is minimal, 
 this is part of a broader strategy to reduce switching 
-by selectively enabling pipeline register updates — 
-aligning with the power and resource optimisation goals of the project.
+by selectively enabling pipeline register updates.
 
 \subsection{Removal of CSR Logic}
 \label{sec:CSR}
@@ -184,17 +190,17 @@ aligning with the power and resource optimisation goals of the project.
 One of the most significant changes made was the complete removal of the 
 Control and Status Register (CSR) logic. 
 Control and Status Registers are optional RISC-V components used to 
-support operating system-level functionality such as 
+support operating system-level features such as 
 interrupt handling, timer access, and machine state tracking.
 
 In the baseline design, CSR handling required dedicated decode paths, 
 register file access logic, and a separate CSR register file backed by block RAM. 
-As CSR instructions were not required 
-for functional correctness in \texttt{bubblesort}, 
+As CSR instructions are not required 
+for correct operation at this level of implementation, 
 this functionality was deemed expendable for the purposes of resource optimisation.
 Since the benchmark programs execute purely in machine mode without 
 requiring interrupts, exceptions, or privileged features, 
-no CSR-related functionality is invoked, 
+no CSR-related mechanisms are invoked, 
 and their removal does not affect functional correctness.
 
 The removal involved disabling CSR detection in the control unit, 
@@ -206,7 +212,7 @@ without CSR support.
 
 This change resulted in a notable reduction in logic complexity and 
 created a marked drop in block RAM usage. 
-As seen in table \ref{tab:CSR} in the Appendix,
+As seen in Table \ref{tab:CSR} in the Appendix,
 the logic cell usage dropped from 3064 to 2905, 
 and the RAM usage dropped from 20 to 12,
 freeing up an additional 20\% of the available block RAM.
@@ -219,12 +225,15 @@ such features are later required.
 \subsection{Unused Control Signal Width}
 \label{sec:Signal_Width}
 
-During inspection of the decode and execute stages, 
-it was identified that the control signal wire cont\_mux\_out 
+While reviewing how the processor decodes instructions and carries them out, 
+a closer examination of the logic and signals involved in these stages was performed
+to find areas where resources could be saved.
+It was identified that the control signal wire cont\_mux\_out 
 was defined as a 32-bit bus, despite only 11 bits being used downstream. 
 To simplify the design and reduce unnecessary routing, 
 the width was reduced to match actual usage, 
-and the custom mux2to1\_11bit module was removed in favour of the standard mux2to1.
+and the custom mux2to1\_11bit module was 
+added to represent this.
 
 This change eliminates unused signal bits, 
 improving signal clarity and slightly reducing synthesis complexity. 
@@ -234,13 +243,15 @@ This contributes to improved maintainability
 and more efficient use of the FPGA's routing resources. 
 Removing unused logic also helps the synthesiser 
 more aggressively optimise signal propagation and packing.
-This change is relatively small, but it highlights how careful inspection 
-of signal widths and register usage can help reduce bloated or unnecessary logic. 
-Although the immediate savings are minor, 
-it demonstrates a valuable approach to 
-improving routing efficiency and reducing synthesis overhead. 
-However, identifying these opportunities can be time-consuming, 
-as it requires manually tracing signal usage across modules and pipeline stages.
+This change is relatively minor in terms of immediate resource savings, 
+but it illustrates a useful strategy for streamlining the design. 
+By tightening signal widths and removing unused control bits, 
+routing congestion can be reduced and synthesis complexity lowered. 
+While the impact is small, applying this kind of low-level refinement 
+across the processor can contribute meaningfully to overall optimisation. 
+However, identifying such inefficiencies is time-consuming, 
+as it often requires manual tracing of 
+signals across modules and pipeline stages.
 
 \section{Potential Risks}
 \label{sec:Potential_Risks}
@@ -264,17 +275,16 @@ Though this has a very positive impact on the LUT usage and in particular
 on the reduction of block RAMs required in the design,
 it has implications with regard to 
 future extensibility and system-level compatibility. 
-By removing CSR support, the processor is no longer capable of handling traps, 
-exceptions, or privileged control, which limits its applicability 
-in more complex applications such as real-time systems, operating systems, 
-or embedded environments requiring timer interrupts or performance monitoring. 
-Reintroducing CSR functionality in later stages would likely involve 
-re-adding significant logic and memory overhead, 
-potentially offsetting the current resource savings.
+By removing CSR support, the processor is no longer capable of 
+handling interrupts, errors, or access control, 
+which limits its applicability in more complex applications 
+such as systems that use timers, interrupts, 
+or need to manage multiple tasks
 
 Lastly, clock gating introduced in the pipeline registers assumes 
-correct stalling logic. If the stall signal is incorrectly asserted or delayed, 
-it could lead to data hazards, register inconsistencies, or pipeline deadlock. 
+correct stalling logic. 
+If the stall signal is incorrectly asserted or delayed, it could lead to 
+data hazards, incorrect register values, or pipeline deadlock. 
 This risk increases as the pipeline control logic becomes more intricate.
 
 Continued validation through simulation and synthesis will be necessary 
@@ -284,19 +294,21 @@ or long-term maintainability.
 \section{Future Work}
 \label{sec:Future_Work}
 
-Several opportunities remain for further resource optimisation. These include:
+Several areas remain that could be explored to further reduce resource usage:
 
 \begin{itemize}[noitemsep]
-    \item Replacing multiplexer trees with generate blocks 
-    to reduce redundant logic.
-    \item Investigating reuse of pipeline 
-    forwarding comparators using shared logic.
-    \item Exploring the controlled use of DSP blocks for arithmetic operations.
-    \item Consolidating register file control paths to reduce control signal fanout.
+    \item Simplifying large logic blocks using \texttt{generate} 
+    statements in Verilog to reduce duplicated code.
+    \item Reducing repeated comparator logic in the forwarding unit 
+    by reusing shared comparison circuits.
+    \item Using the FPGA's DSP blocks for arithmetic operations 
+    to free up logic cells and improve efficiency.
+    \item Cleaning up and simplifying control signal 
+    wiring around the register file.
 \end{itemize}
 
-Each of these changes will be assessed for impact on logic usage, 
-timing closure, and compatibility with the existing control logic.
+Each of these changes will be assessed for impact on logic usage
+and the other performance metrics.
 
 
 \section{Conclusion}
@@ -305,16 +317,15 @@ timing closure, and compatibility with the existing control logic.
 This report outlines a series of logic and memory optimisations applied 
 to the baseline RISC-V processor design. 
 Through targeted changes - clock gating, CSR removal, 
-and control signal width trimming — 
+and control signal width trimming - 
 a cumulative reduction of 182 logic cells and 8 block RAMs was achieved 
 without degrading functionality. 
-These gains significantly improve the design's flexibility 
+These gains improve the design's flexibility 
 for future performance or power-directed improvements.
 
-The most immediate modification that needs to be made
-will be shifting the adder operation over to DSP blocks,
-freeing up more LUTs, reducing routing congestion,
-and shortening the critical path through the execute stage.
+The most immediate modification planned is to shift 
+the adder operation to DSP blocks, which is expected to free up LUTs, 
+reduce routing congestion, and improve overall timing performance.
 
 \newpage
 \appendix
@@ -401,10 +412,6 @@ and shortening the critical path through the execute stage.
     \label{tab:Signal_Width}
 \end{table}
 
-\section{Code}
-
-\section{Interim Report 1}
-\label{sec:{Interim_Report_1}}
 \includepdf[pages=3-]{Reports/wh365-interim-report-1.pdf}
 
 \end{document}
