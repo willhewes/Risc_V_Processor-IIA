@@ -165,11 +165,11 @@ These observations guided the subsequent design changes detailed in this report.
 
 To reduce unnecessary switching activity in the control path, 
 support for gated updates to the program counter was introduced. 
-This involved modifying the program\_counter.v module 
-to accept a write\_enable signal, 
+This involved modifying the \texttt{program\_counter.v} module 
+to accept a \texttt{write\_enable} signal, 
 allowing updates to be conditionally applied 
 only when pipeline progression is required. 
-The cpu.v module was updated accordingly to assert write\_enable 
+The cpu.v module was updated accordingly to assert \texttt{write\_enable} 
 whenever the stall signal is low, 
 ensuring that the PC is held stable during pipeline stalls.
 
@@ -193,21 +193,24 @@ Control and Status Registers are optional RISC-V components used to
 support operating system-level features such as 
 interrupt handling, timer access, and machine state tracking.
 
-In the baseline design, CSR handling required dedicated decode paths, 
-register file access logic, and a separate CSR register file backed by block RAM. 
+In the baseline design, CSR handling added extra complexity to the decode stage, 
+required new control signals for accessing CSRs, 
+and introduced a dedicated register file to store CSR values. 
+This register file was implemented using block RAM, 
+which increased resource usage.
 As CSR instructions are not required 
 for correct operation at this level of implementation, 
-this functionality was deemed expendable for the purposes of resource optimisation.
+this functionality could be removed for the purposes of resource optimisation.
 Since the benchmark programs execute purely in machine mode without 
 requiring interrupts, exceptions, or privileged features, 
-no CSR-related mechanisms are invoked, 
+no CSR-related mechanisms are used, 
 and their removal does not affect functional correctness.
 
-The removal involved disabling CSR detection in the control unit, 
-replacing related wires with fixed constants, and removing the csr\_file module 
-and associated datapath multiplexers. 
+The removal involved disabling CSR detection 
+in \texttt{control\_unit.v} 
+and replacing related wires with fixed constants.
 Registers previously driven by CSR outputs were redirected to bypass logic 
-or default values, ensuring that the pipeline remained functionally complete 
+or default values, ensuring that the pipeline remained functionally correct
 without CSR support.
 
 This change resulted in a notable reduction in logic complexity and 
@@ -215,24 +218,24 @@ created a marked drop in block RAM usage.
 As seen in Table \ref{tab:CSR} in the Appendix,
 the logic cell usage dropped from 3064 to 2905, 
 and the RAM usage dropped from 20 to 12,
-freeing up an additional 20\% of the available block RAM.
+freeing up an additional 26\% of the available block RAM.
 It also simplifies the decode and 
 execution stages, reducing combinational logic depth. 
 However, it does remove support for future system-level extensions 
 that rely on CSR functionality, and would need to be revisited if 
 such features are later required.
 
-\subsection{Unused Control Signal Width}
+\subsection{Trimming Control Signal Width}
 \label{sec:Signal_Width}
 
 While reviewing how the processor decodes instructions and carries them out, 
 a closer examination of the logic and signals involved in these stages was performed
 to find areas where resources could be saved.
-It was identified that the control signal wire cont\_mux\_out 
+It was identified that the control signal wire \texttt{cont\_mux\_out} 
 was defined as a 32-bit bus, despite only 11 bits being used downstream. 
 To simplify the design and reduce unnecessary routing, 
 the width was reduced to match actual usage, 
-and the custom mux2to1\_11bit module was 
+and the custom \texttt{mux2to1\_11bit} module was 
 added to represent this.
 
 This change eliminates unused signal bits, 
@@ -386,7 +389,7 @@ reduce routing congestion, and improve overall timing performance.
         \toprule
         Resource type & Used & \% of total \\ \midrule
         Logic cells (\texttt{ICESTORM\_LC}) & 2905 / 5280 & 57\,\% \\
-        Block RAMs (\texttt{ICESTORM\_RAM}) & 12 / 30 & 66\,\% \\
+        Block RAMs (\texttt{ICESTORM\_RAM}) & 12 / 30 & 40\,\% \\
         IO buffers (\texttt{SB\_IO}) & 8 / 96 & 8\,\% \\
         Global buffers (\texttt{SB\_GB}) & 5 / 8 & 62\,\% \\
         HF oscillators (\texttt{ICESTORM\_HFOSC}) & 1 / 1 & 100\,\% \\
@@ -402,7 +405,7 @@ reduce routing congestion, and improve overall timing performance.
         \toprule
         Resource type & Used & \% of total \\ \midrule
         Logic cells (\texttt{ICESTORM\_LC}) & 2891 / 5280 & 57\,\% \\
-        Block RAMs (\texttt{ICESTORM\_RAM}) & 12 / 30 & 66\,\% \\
+        Block RAMs (\texttt{ICESTORM\_RAM}) & 12 / 30 & 40\,\% \\
         IO buffers (\texttt{SB\_IO}) & 8 / 96 & 8\,\% \\
         Global buffers (\texttt{SB\_GB}) & 5 / 8 & 62\,\% \\
         HF oscillators (\texttt{ICESTORM\_HFOSC}) & 1 / 1 & 100\,\% \\
