@@ -91,33 +91,54 @@
 
 \begin{document}
 \pagenumbering{gobble}
-\includepdf[pages=-]{Handouts/IIA Project Coversheet Feedback Interim Report 2.pdf}
+\includepdf[pages=-]{Handouts/IIA Project Coversheet Feedback Final Report.pdf}
 \maketitle
 \hrule
 \tableofcontents
 \newpage
 \pagenumbering{arabic} \setcounter{page}{1}
+% No more than 8 A4 sides, excluding appendices
+% Include tables and descriptions in resource usage?
 
 \section{Introduction}
 \label{sec:Introduction}
 % This section should give a detailed introduction to the changes
 % you have implemented for your role on the team 
-% (power/energy, time, or resource efficiency).
+% (1 A4 side)
 
 \section{Design Strategy}
 \label{sec:Design_Strategy}
+% Describing the specific design strategy employed for your role in the team (0.5-1 A4 side)
+% Timeline diagram?
+% Include subsection on the baseline processor, both description of its structure and resource usage
 
 \section{Design Description}
 \label{sec:Design_Description}
+% For the components you implemented for your team (regardless of your role) (2-3 A4 sides)
+% Include diagram on DSP blocks?
+% Mention how your changes affect the other aspects
+% Summarise original behaviour, describe original behaviour, justify it
 
 \section{Problems Encountered}
 \label{sec:Problems_Encountered}
+% Problems encountered by you and their technical solutions (1-2 A4 sides)
+% Maybe mention minimising the impact of the others contributions i.e. pipelining
+% Warnings, missing reports, LED not blinking after some tests
+% Inability to test LED always due to Cheng having it, less flexibility?
 
 \section{Test Procedure}
 \label{sec:Test_Procedure}
+% Test procedure for your components in the team's efforts (1-2 A4 sides)
+% Testing procedure automated flow
+% Test on bubblesort and software
+% Manual testing?
+% Git version control helping to keep track of affects on resource usage etc., ease of use
 
 \section{Conclusion}
 \label{sec:Conclusion}
+% Conclusions and recommendations for further improvements in your design and evaluation
+% Use this section to provide a retrospective on how your team coordinated amongst yourselves
+% how that worked, and what you would do differently in the future (1-2 A4 sides)
 
 \newpage
 \appendix
@@ -142,7 +163,7 @@
 
 \begin{table}[H] 
     \centering
-    \begin{tabularx}{0.6\textwidth}{X c c}
+    \begin{tabularx}{0.65\textwidth}{X c c}
         \toprule
         Resource type & Used & \% of total \\ \midrule
         Logic cells (\texttt{ICESTORM\_LC}) & 3073 / 5280 & 58\,\% \\
@@ -158,7 +179,7 @@
 
 \begin{table}[H] 
     \centering
-    \begin{tabularx}{0.6\textwidth}{X c c}
+    \begin{tabularx}{0.65\textwidth}{X c c}
         \toprule
         Resource type & Used & \% of total \\ \midrule
         Logic cells (\texttt{ICESTORM\_LC}) & 3064 / 5280 & 57\,\% \\
@@ -174,7 +195,7 @@
 
 \begin{table}[H] 
     \centering
-    \begin{tabularx}{0.6\textwidth}{X c c}
+    \begin{tabularx}{0.65\textwidth}{X c c}
         \toprule
         Resource type & Used & \% of total \\ \midrule
         Logic cells (\texttt{ICESTORM\_LC}) & 2905 / 5280 & 57\,\% \\
@@ -190,7 +211,7 @@
 
 \begin{table}[H] 
     \centering
-    \begin{tabularx}{0.6\textwidth}{X c c}
+    \begin{tabularx}{0.65\textwidth}{X c c}
         \toprule
         Resource type & Used & \% of total \\ \midrule
         Logic cells (\texttt{ICESTORM\_LC}) & 2891 / 5280 & 57\,\% \\
@@ -203,7 +224,5 @@
     \caption{Report after removing unused control signal width}
     \label{tab:Signal_Width}
 \end{table}
-
-\includepdf[pages=3-]{Reports/wh365-interim-report-1.pdf}
 
 \end{document}
