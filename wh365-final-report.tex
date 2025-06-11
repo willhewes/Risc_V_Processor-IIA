@@ -215,29 +215,33 @@ As I was initially unfamiliar with processor and FPGA design at this level,
 the early stages of the project were spent working through the course material 
 and exploring online resources to build a clearer understanding of 
 where changes could be most effectively targeted. 
-This learning phase was followed by a series of small experiments within the Verilog files, 
-which helped build confidence with the structure of the codebase. 
-In hindsight, some of these early edits were made without a broader strategy in place, 
+This initial research was followed by a series of small, 
+hands-on changes to the Verilog code, 
+helping build familiarity with the processor's structure and behaviour.
+In hindsight, these early edits were made 
+without a broader design strategy in place, 
 but they laid the groundwork for a more focused and informed optimisation approach 
 that developed as the project progressed.
 This unstructured approach naturally led to a few early mistakes, 
-such as unintentionally breaking functionality or introducing hard-to-trace bugs. 
+such as unintentionally breaking functionality or introducing hard-to-trace bugs.
+These mistakes will be discussed more in Section \ref{sec:Problems_Encountered}.
 These issues highlighted the need for a more disciplined workflow, 
-which later included stricter version control, more careful integration with other modules, 
-and the use of targeted testbenches and synthesis diffs to catch problems earlier.
+which later included stricter version control, 
+more careful integration with other modules, 
+and simulations to verify that signals behaved as expected after changes.
 
 As a team we worked together through git, allowing us to collaborate effectively.
-We set up different branches from the main for each of us to use, 
+We set up different branches from the \texttt{main} for each of us to use, 
 with the plan being that we would work on some changes independently 
 and then merge our changes cohesively.
-My workflow initially consisted of running the \textit{make, make install} etc.
+My workflow initially consisted of running the various \texttt{Makefile}
 commands to initiate yosys and nextpnr, 
 synthesising our implementation and performing a place-and-route operation.
 I saved the reports from these operations to a .txt file, 
 allowing me to perform \textit{git diff} on the text file 
 from any of my commits to easily see the impact that each change had 
 on various elements of resource usage, as well as timing.
-I frequently relied on a block of code pasted at once 
+I used a single command block to automate this workflow 
 to rapidly implement and track my changes, 
 which is shown below in Program \ref{prog:Workflow}.
 
@@ -255,6 +259,38 @@ cd ../bubblesort
 This proved instrumental to a quick and iterative development cycle, 
 allowing me to synthesise, place-and-route, and record results in a single step.
 This would form the basis of my workflow throughout the project.
+
+A significant part of the optimisation process involved 
+carefully examining the Verilog source files to understand 
+the structure and interaction of each component
+across multiple files. 
+This required tracing signal flow through the datapath and control logic, 
+identifying where logic or memory resources were being used inefficiently, 
+and confirming whether particular subsystems - 
+such as CSRs or multiplexer paths - 
+were functionally active during execution. 
+Pattern-matching tools like \texttt{grep} were used extensively 
+to locate signal definitions and check bit widths, 
+while simple simulation testbenches were created to verify specific behaviours,
+most notably during the beleaguered formulation of the DSP blocks.
+These methods helped build a reliable picture of the design's internal behaviour 
+and revealed opportunities to safely eliminate or simplify hardware blocks 
+without compromising core functionality.
+
+After using these methods to identify and eliminate innefficiencies within the code,
+these changes would be uploaded to git for integration with the other branches,
+allowing us to work independently on our seperate focus and
+providing an easy way to handle merge conflicts.
+
+Unfortunately, this is another aspect where planning would have made a significant
+improvement to our working procedure. 
+As there was only one FPGA, our individual changes would be applied and
+though they would successfully synthesise and be routed,
+often the functionality would be broken and we would be unable to tell until 
+the code could be tested on the FPGA when we would all meet again.
+This meant that much of our time was spent working on changes that would 
+need to be extensively debugged, and unfortunately many of these initial changes
+would in the end remain unimplemented due to time constraints.
 
 \section{Design Description}
 \label{sec:Design_Description}
