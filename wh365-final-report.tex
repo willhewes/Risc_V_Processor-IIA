@@ -112,8 +112,8 @@ The overarching aim is to optimise
 the processor design with respect to its 
 performance, power dissipation, and resource usage, 
 while balancing trade-offs between these three aspects. 
-Each team member is responsible for focusing on one of the three aspects.
-My reports will focus on the resource usage of the design.
+Each team member is responsible for focusing on one of the three aspects
+and my reports focus on the resource usage of the design.
 This report is the final report for this project.
 
 In the first report we evaluated three programs as a baseline against
@@ -124,7 +124,8 @@ to blink an LED on the FPGA,
 bypassing the processor core entirely. 
 As a result it had very low resource utilisation across the board.
 The second program evaluated was \texttt{softwareblink},
-which performed a similar task but instead utilised the sail-core processor.
+which performed the same task but instead implemented through software,
+utilising the sail-core processor.
 As a result, the design used a much larger number of logic cells,
 and also introduced the usage of a few other primitive cells such as 
 block RAMs and DSP blocks.
@@ -141,20 +142,74 @@ As such we chose to base our testing primarily
 on the more complex \texttt{bubblesort},
 allowing us to push the processor further,
 offering a more representative view of our design.
-Though it should be noted the other programs were still tested
+It should be noted the other programs were still tested
 to ensure functionality and check progress,
 they were just less emblematic of our implementaions capabilities.
 
-The baseline implementation on the FPGA featured many areas
-inefficiencies with regard to its core ..., 
-and also its underutilisation of certain primitives available on the board.
-The most notable among these are its usage of 
+The baseline implementation on the FPGA showed several inefficiencies 
+in its core design and made poor use of 
+some of the resources available on the board. 
+Before describing the changes made, it's helpful to briefly explain 
+what those resources are and how they affect the processor.
+
+Logic cells, or LCs, are the basic building blocks used to 
+implement logic on the FPGA. 
+They include components like look-up tables and flip-flops, 
+and are used for almost everything, including 
+arithmetic, control signals, and registers. 
+Because almost everything in the design depends on logic cells in some way, 
+reducing how many are used was the main goal throughout the project.
+The changes that directly improved LC usage primarily came from
+cleaning up registers, wires, and other redundant logic where possible.
+One noteable example of this was reducing a multiplexing wire signal
+from 32 bits down to 11 bits. These examples will be discussed in more detail
+in the body of the report.
+
+Other primitives available on the board are similarly powerful,
+though they have a key difference - they are fixed for a given implementation
+on the microprocessor.
+This means that whereas LCs will increase and potentially become limiting
+for a particularly complex program, 
+other primitives such as block RAMs, DSP registers, and buffers
+will not increase outside of the capacity of the board if designed properly.
+
+Block RAMs are small dedicated memory blocks built into the FPGA. 
+They're useful when a design needs to store more data 
+than would be practical with flip-flops alone. 
+In the baseline implementation, 
+they were used by certain parts of the processor 
+such as the register file and CSR logic. 
+By removing CSR logic from the design,
+the number of block RAMs used was reduced 
+from 20 to 12 of the 30 available,
+meaning that more memory functions could be moved to the RAM 
+in order to preserve logic cells.
+Unfortunately these changes could not be implemented due to time constraints,
+but the plan was to ...
+
+DSP blocks are specialised units designed for fast arithmetic. 
+Instead of building adders and multipliers out of regular logic, 
+the FPGA provides a few dedicated DSP blocks that are faster and use less space. 
+The baseline design didn't use any of these, 
+relying entirely on logic cells even for basic addition. 
+One of the most significant alterations to the base implementation
+was forcing the \textit{adder.v} to make use of these DSP blocks
+for addition and subtraction, 
+freeing up LUTs to be used in more sophisticated logic.
+Implementing this change reduced the LC usage by ..., 
+at the expense of 3 of the 8 DSP blocks available,
+leaving room for further improvement in this regard.
+
+In addition to these changes that were successfully implemented,
+there are many that ...
 
 \section{Design Strategy}
 \label{sec:Design_Strategy}
 % Describing the specific design strategy employed for your role in the team (0.5-1 A4 side)
 % Timeline diagram?
 % Include subsection on the baseline processor, both description of its structure and resource usage
+
+
 
 \section{Design Description}
 \label{sec:Design_Description}
