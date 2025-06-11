@@ -203,12 +203,28 @@ leaving room for further improvement in this regard.
 In addition to these changes that were successfully implemented,
 there are many that ...
 
+\newpage
+
 \section{Design Strategy}
 \label{sec:Design_Strategy}
 % Describing the specific design strategy employed for your role in the team (0.5-1 A4 side)
 % Timeline diagram?
 % Include subsection on the baseline processor, both description of its structure and resource usage
 
+As I was initially unfamiliar with processor and FPGA design at this level, 
+the early stages of the project were spent working through the course material 
+and exploring online resources to build a clearer understanding of 
+where changes could be most effectively targeted. 
+This learning phase was followed by a series of small experiments within the Verilog files, 
+which helped build confidence with the structure of the codebase. 
+In hindsight, some of these early edits were made without a broader strategy in place, 
+but they laid the groundwork for a more focused and informed optimisation approach 
+that developed as the project progressed.
+This unstructured approach naturally led to a few early mistakes, 
+such as unintentionally breaking functionality or introducing hard-to-trace bugs. 
+These issues highlighted the need for a more disciplined workflow, 
+which later included stricter version control, more careful integration with other modules, 
+and the use of targeted testbenches and synthesis diffs to catch problems earlier.
 
 
 \section{Design Description}
