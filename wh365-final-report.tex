@@ -299,6 +299,41 @@ would in the end remain unimplemented due to time constraints.
 % Mention how your changes affect the other aspects
 % Summarise original behaviour, describe original behaviour, justify it
 
+The changes made during this project were, for the most part, 
+minor and locally scoped optimisations rather than sweeping architectural overhauls. 
+The aim throughout was to reduce resource usage on the FPGA - 
+specifically the logic cell count  - 
+without compromising the functional correctness of the processor. 
+While logic cells were the primary focus, 
+some changes also impacted the usage of other board primitives 
+such as block RAMs and DSP blocks. 
+
+Each optimisation was applied as discussed in earlier sections,
+incrementally and tracked using Git, 
+with synthesis reports logged at every stage to assess their effect. 
+The following subsections outline each of these changes, 
+along with their motivation, implementation, and observed impact. 
+Where relevant, small pieces of code are shown in the main body of the report, 
+while longer or supporting code is included in the appendix.
+
+\subsection{Register File Cleanup}
+\label{sec:Reg}
+
+\subsection{Clock Gating}
+\label{sec:Gating}
+
+\subsection{Signal Width Reduction}
+\label{sec:Signal_Width}
+
+\subsection{DSP Substitution}
+\label{sec:DSP}
+
+\subsection{CSR}
+\label{sec:CSR}
+
+\subsection{Unimplemented Changes}
+\label{sec:Unimplemented_Changes}
+
 \section{Problems Encountered}
 \label{sec:Problems_Encountered}
 % Problems encountered by you and their technical solutions (1-2 A4 sides)
