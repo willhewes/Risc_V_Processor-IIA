@@ -319,26 +319,32 @@ while longer or supporting code is included in the appendix.
 \subsection{Clock Gating}
 \label{sec:Gating}
 
-One of the earliest changes involved the program counter (PC) logic, 
-specifically targeting unnecessary updates during pipeline stalls. 
-In the baseline implementation, the PC would increment on every clock cycle 
-regardless of the state of instruction execution. 
-This meant that even when the processor was stalled - 
-waiting on a memory operation or handling a hazard - 
-the PC would continue updating, 
-consuming logic transitions and toggling downstream modules unnecessarily. 
-To address this, a clock gating mechanism was added by 
-introducing a \texttt{pc\_write\_enable} signal. 
-This signal was derived from a \texttt{stall} flag, 
-which was already present in parts of the pipeline logic. 
-By modifying the \texttt{cpu.v} and \texttt{top.v} modules 
-to propagate this control signal, and wrapping the PC assignment 
-in an \texttt{if (pc\_write\_enable)} condition, 
-unnecessary writes to the PC were suppressed when the processor was inactive. 
+One of the earliest changes involved modifying the program counter (PC) logic 
+to reduce unnecessary switching activity during pipeline stalls. 
+In the baseline implementation, the PC would increment 
+on every clock cycle regardless of whether the pipeline was stalled, 
+resulting in wasted transitions and toggling of downstream logic even 
+when no useful computation was occurring.
 
-Although the resulting logic cell savings were relatively small - 
-on the order of 9 LUTs - this change helped reduce switching activity 
-in the PC and clarified how stall logic propagated through the processor. 
+To address this, support for gated updates to the program counter was introduced. 
+This involved modifying the \texttt{program\_counter.v} module to accept 
+a new \texttt{write\_enable} signal, 
+allowing updates to be conditionally applied only when 
+pipeline progression was required. 
+The \texttt{cpu.v} module was updated to assert this signal whenever 
+the \texttt{stall} flag was low, 
+ensuring that the PC would remain stable during pipeline stalls. 
+The signal was then routed through \texttt{top.v} to maintain module connectivity.
+
+This change primarily aimed to reduce dynamic power dissipation by 
+avoiding unnecessary switching in the PC logic. 
+While the overall resource saving was modest - 
+freeing approximately 9 logic cells - 
+it represents an important step in selectively controlling register updates. 
+It also clarified the flow of stall logic through the processor 
+and established a cleaner separation between control and datapath behaviour. 
+The resource impact of this modification is 
+summarised in Table~\ref{tab:Program_Counter} in the Appendix.
 
 \subsection{Signal Width Reduction}
 \label{sec:Signal_Width}
