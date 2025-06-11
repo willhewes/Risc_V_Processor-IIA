@@ -226,6 +226,35 @@ These issues highlighted the need for a more disciplined workflow,
 which later included stricter version control, more careful integration with other modules, 
 and the use of targeted testbenches and synthesis diffs to catch problems earlier.
 
+As a team we worked together through git, allowing us to collaborate effectively.
+We set up different branches from the main for each of us to use, 
+with the plan being that we would work on some changes independently 
+and then merge our changes cohesively.
+My workflow initially consisted of running the \textit{make, make install} etc.
+commands to initiate yosys and nextpnr, 
+synthesising our implementation and performing a place-and-route operation.
+I saved the reports from these operations to a .txt file, 
+allowing me to perform \textit{git diff} on the text file 
+from any of my commits to easily see the impact that each change had 
+on various elements of resource usage, as well as timing.
+I frequently relied on a block of code pasted at once 
+to rapidly implement and track my changes, 
+which is shown below in Program \ref{prog:Workflow}.
+
+\begin{lstlisting}[language=bash,
+    caption={Workflow used to synthesise and record results},
+    label={prog:Workflow}]
+make clean && \
+make && \
+make install && \
+cd ../processor && \
+make > Resources.txt 2>&1 && \
+cd ../bubblesort
+\end{lstlisting}
+
+This proved instrumental to a quick and iterative development cycle, 
+allowing me to synthesise, place-and-route, and record results in a single step.
+This would form the basis of my workflow throughout the project.
 
 \section{Design Description}
 \label{sec:Design_Description}
