@@ -114,9 +114,41 @@ performance, power dissipation, and resource usage,
 while balancing trade-offs between these three aspects. 
 Each team member is responsible for focusing on one of the three aspects.
 My reports will focus on the resource usage of the design.
-This report is the final report in for this project.
+This report is the final report for this project.
 
 In the first report we evaluated three programs as a baseline against
+which our improvements could be compared.
+The first of these three porgrams was \texttt{hardwareblink},
+a program which relied purely on combinational and sequential logic
+to blink an LED on the FPGA,
+bypassing the processor core entirely. 
+As a result it had very low resource utilisation across the board.
+The second program evaluated was \texttt{softwareblink},
+which performed a similar task but instead utilised the sail-core processor.
+As a result, the design used a much larger number of logic cells,
+and also introduced the usage of a few other primitive cells such as 
+block RAMs and DSP blocks.
+The final program was \texttt{bubblesort}, which would perform a 
+bubblesort algorithm and blink the LED to confirm it was finished.
+Due to the increased complexity of the program,
+the logic cell utilisation was greater than for \texttt{softwareblink},
+but crucially the other primitives did not increase, 
+as they relied primarily on their design within the verilog files.
+The final test would be to process 
+a new, unseen program under our implementation and evaluate it for its 
+resource usage, performance and power dissipation.
+As such we chose to base our testing primarily 
+on the more complex \texttt{bubblesort},
+allowing us to push the processor further,
+offering a more representative view of our design.
+Though it should be noted the other programs were still tested
+to ensure functionality and check progress,
+they were just less emblematic of our implementaions capabilities.
+
+The baseline implementation on the FPGA featured many areas
+inefficiencies with regard to its core ..., 
+and also its underutilisation of certain primitives available on the board.
+The most notable among these are its usage of 
 
 \section{Design Strategy}
 \label{sec:Design_Strategy}
