@@ -683,6 +683,7 @@ for collaborative development.
 % Manual testing?
 % Git version control helping to keep track of affects on resource usage etc., ease of use
 
+\subsection*{Primary Workflow}
 My workflow initially consisted of running the various \texttt{Makefile}
 commands to initiate yosys and nextpnr, 
 synthesising our implementation and performing a place-and-route operation.
@@ -709,6 +710,66 @@ This proved instrumental to a quick and iterative development cycle,
 allowing me to synthesise, place-and-route, and record results in a single step.
 This would form the basis of my workflow throughout the project.
 
+By analysing the output text file, changes to resource utilisation
+could be quickly tracked to see what affect minor ammendments to the code may cause.
+Additionally, it allowed for comparisons with performance,
+enabling quick and informed decisions to be made regarding which changes 
+would be worth persuing.
+
+\subsection*{Validation of Changes}
+
+Each modification was tested using a combination of synthesis reports, 
+simulation, and hardware-based functional testing. 
+
+The \texttt{bubblesort} program was used as the main benchmark 
+against which changes could be compared. 
+Due to its increased complexity compared to \texttt{softwareblink}, 
+it exercised a broader portion of the processor's datapath and control logic, 
+making it a more representative test case for evaluating 
+whether changes preserved correctness. 
+This can be seen most notably from the implementation of DSP blocks,
+which functioned correctly with \texttt{softwareblink} 
+but had a minor lapse in functionality with \texttt{bubblesort},
+due to the reliance in carry-on logic to perform.
+However, both programs were tested after every major commit to verify 
+that basic functionality had not regressed.
+
+For visual confirmation, the blinking patterns of LEDs were used as a crude 
+but reliable proxy for correct behaviour. 
+\texttt{softwareblink} was expected to blink with a regular pattern, 
+while \texttt{bubblesort} would trigger in a distinctive pattern 
+indicating the sorting algorithm.
+
+\subsection*{Simulation Support}
+
+In addition to hardware testing, 
+limited simulation was used later in the project to validate specific modules. 
+Custom testbenches were written for the ALU and adder, 
+especially during the implementation of DSP-based arithmetic. 
+These helped isolate functional bugs before hardware deployment and 
+improved turnaround time for debugging low-level modules.
+
+Although not all subsystems were covered by simulation, 
+this selective approach was sufficient to identify persistent logic errors 
+in isolated components, reducing dependency on the single FPGA board.
+
+\subsection*{Version Control as a Testing Tool}
+
+Git played a central role in managing and validating resource usage changes. 
+By saving the synthesis output to a consistent \texttt{Resources.txt} file 
+after each commit, \texttt{git diff} could be used to track even minor variations 
+in LUT usage, RAM blocks, or timing.
+
+When testing on hardware was not immediately possible, 
+multiple development branches were created from a known working commit. 
+This allowed experimental changes to be validated in isolation 
+before being merged back into the main branch. 
+If regressions were later discovered, \texttt{git bisect} and 
+commit-by-commit testing helped identify which change had introduced the issue.
+
+This version-controlled workflow, combined with the automated synthesis command, 
+created a highly reproducible and trackable test process that supported 
+rapid iteration without losing sight of project constraints.
 
 \section{Conclusion}
 \label{sec:Conclusion}
