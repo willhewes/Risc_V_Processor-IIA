@@ -234,31 +234,6 @@ As a team we worked together through git, allowing us to collaborate effectively
 We set up different branches from the \texttt{main} for each of us to use, 
 with the plan being that we would work on some changes independently 
 and then merge our changes cohesively.
-My workflow initially consisted of running the various \texttt{Makefile}
-commands to initiate yosys and nextpnr, 
-synthesising our implementation and performing a place-and-route operation.
-I saved the reports from these operations to a .txt file, 
-allowing me to perform \textit{git diff} on the text file 
-from any of my commits to easily see the impact that each change had 
-on various elements of resource usage, as well as timing.
-I used a single command block to automate this workflow 
-to rapidly implement and track my changes, 
-which is shown below in Program \ref{prog:Workflow}.
-
-\begin{lstlisting}[language=bash,
-    caption={Workflow used to synthesise and record results},
-    label={prog:Workflow}]
-make clean && \
-make && \
-make install && \
-cd ../processor && \
-make > Resources.txt 2>&1 && \
-cd ../bubblesort
-\end{lstlisting}
-
-This proved instrumental to a quick and iterative development cycle, 
-allowing me to synthesise, place-and-route, and record results in a single step.
-This would form the basis of my workflow throughout the project.
 
 A significant part of the optimisation process involved 
 carefully examining the Verilog source files to understand 
@@ -343,8 +318,25 @@ freeing approximately 9 logic cells -
 it represents an important step in selectively controlling register updates. 
 It also clarified the flow of stall logic through the processor 
 and established a cleaner separation between control and datapath behaviour. 
-The resource impact of this modification is 
-summarised in Table~\ref{tab:Program_Counter} in the Appendix.
+
+One trade-off, however, was a slight increase in global buffer (GB) usage, 
+rising from 5 to 6 out of the 8 available on the iCE40 device. 
+Global buffers are specialised routing resources used to 
+distribute high-fanout signals - 
+such as clocks or enables - efficiently across the FPGA fabric. 
+Their usage ensures consistent signal timing over long distances, 
+especially when a control signal must drive registers in multiple modules. 
+The increase was likely due to the new 
+\texttt{pc\_write\_enable} signal being propagated through 
+several layers of control and datapath logic, 
+requiring global routing resources to maintain timing closure.
+This is not a key resource in the same way that LUTs and flip-flops are, 
+and so a minor increase in GB usage is not considered critical. 
+Provided the design remains within the hardware limit of 8, 
+such changes are acceptable if they simplify control signalling or improve timing.
+
+The impact of this modification is 
+summarised in Table \ref{tab:Program_Counter} in the Appendix.
 
 \subsection{Signal Width Reduction}
 \label{sec:Signal_Width}
@@ -471,9 +463,6 @@ end
 end
 \end{lstlisting}
 
-\iffalse
-Initial problems with carry over
-\fi
 Following this change, logic cell usage was reduced by 94 LUTs, 
 at the cost of 3 out of 8 available DSP blocks. 
 As mentioned in Section \ref{sec:Introduction},
@@ -491,8 +480,73 @@ is provided in Figure~\ref{fig:dspblock} in the Appendix.
 \subsection{CSR}
 \label{sec:CSR}
 
-\subsection{Unimplemented Changes}
-\label{sec:Unimplemented_Changes}
+The most impactful change made to the processor was the complete removal of the 
+Control and Status Register (CSR) logic. 
+CSRs are a core but optional component of the RISC-V architecture specification, 
+primarily used to support privileged operations such as 
+trap handling, performance counters, environment configuration, and interrupt control. 
+In a full system, CSR instructions are essential for switching between user and machine 
+modes, managing exceptions, and interacting with the operating system.
+
+However, for the purposes of this project, none of the benchmark programs utilised 
+any CSR-related functionality. 
+The processor ran entirely in \textit{machine mode}, 
+the highest privilege level defined in the RISC-V specification. 
+In this simplified configuration, 
+there was no support for exception handling, privilege escalation, 
+or multiple execution contexts. 
+As a result, the Control and Status Register (CSR) subsystem - 
+which is primarily intended for use in operating systems and trap handling - 
+was never accessed during execution and could be safely removed 
+without impacting functionality.
+Despite this, the baseline implementation included a fully 
+integrated CSR register file backed by block RAM, associated decode logic in the 
+control unit, and forwarding and hazard-handling support for CSR instructions.
+
+This was identified as a redundant functionality by ,,,, 
+Initial attempts at removal simply set 
+all the relevant function codes and carrier signals to zero,
+introducing dummy wires to ensure the CSR logic was called without breaking anything.
+This is demonstrated in Program \ref{prog:CSR} below,
+displaying one instance in which the CSR logic was initially nullified.
+
+\begin{lstlisting}[style=verilog-style, caption=
+    {Short example of eliminating CSR logic}, label={prog:CSR}]
+	wire			CSRR_signal = 1'b0;
+	wire			CSRRI_signal = 1'b0;
+\end{lstlisting}
+
+Eventually, any reference to CSR was simply removed,
+using \texttt{grep} as mentioned earlier to identify
+any intance where CSR was called and remove it.
+This took a few attempts, as CSR logic was written throughout the system structure,
+meaning that its removal would prove very effective at optimising resource usage.
+CSR logic was removed from all defines files, any ALU logic,
+the control and forwarding units, the CPU, 
+and the CSR.v file was removed.
+
+Removing the CSR logic significantly simplified the processor architecture and 
+yielded one of the largest resource reductions in the entire project. 
+The CSR register file alone occupied 8 of the 30 
+available block RAMs on the iCE40 device, 
+and its associated decode, hazard handling, 
+and forwarding logic introduced considerable 
+complexity into the control and execution paths. 
+By eliminating this subsystem entirely -
+removing references from the ALU, control unit, 
+forwarding logic, CPU, and all the defines - 
+the design achieved a reduction of approximately 251 logic cells and 8 block RAMs, 
+as reflected in Tables \ref{tab:modification_reductions} and 
+\ref{tab:CSR} in the Appendix. 
+This change also introduced a minor increase in global buffer usage, 
+as removing the CSR subsystem altered control signal routing and clock enable logic.
+These gains not only freed critical resources, 
+but also opened the door for relocating other memory elements into block RAM in future, 
+improving the flexibility of the implementation. 
+This change exemplifies the benefit of tailoring 
+FPGA designs to their target workloads: 
+by removing unused ISA features like CSR support
+substantial savings were achieved without compromising correctness or functionality.
 
 \section{Problems Encountered}
 \label{sec:Problems_Encountered}
@@ -500,6 +554,98 @@ is provided in Figure~\ref{fig:dspblock} in the Appendix.
 % Maybe mention minimising the impact of the others contributions i.e. pipelining
 % Warnings, missing reports, LED not blinking after some tests
 % Inability to test LED always due to Cheng having it, less flexibility?
+
+A number of challenges were encountered throughout the optimisation process, 
+ranging from hardware limitations to software integration issues. 
+This section outlines the most significant obstacles and 
+the strategies used to address them,
+and perhaps more importantly what steps could be taken to mitigating
+them in the future.
+
+\subsection*{Limited Access to Hardware}
+
+Only one FPGA board was available to the group, 
+which naturally restricted testing opportunities. 
+Since most changes could only be fully verified on physical hardware 
+by checking if an LED behaved as expected,
+this limitation often caused long delays between making a change 
+and receiving confirmation of success or failure. 
+Often functionality appeared intact through synthesis 
+but failed when deployed. 
+There were several instances early on in developement where 
+a series of changes were made to the implementation 
+without testing each one individually,
+only for the program to lack a core piece of functionality from an earlier commit
+meaning that more time would have to be spent debugging.
+
+\subsection*{Lack of Formal Simulation}
+
+At the beginning of the project, testing was done almost exclusively on hardware, 
+with no formal simulation or testbenches in place. 
+This meant many regressions were only caught after full synthesis and flashing, 
+which made debugging inefficient and slow. As the project progressed, 
+targeted simulation testbenches were created to validate key modules 
+such as the ALU and adder. 
+These helped reduce reliance on the board for initial verification and 
+caught issues earlier in the development process.
+
+\subsection*{Integration and Merging Difficulties}
+
+Given the distributed nature of development, 
+code integration occasionally introduced instability. 
+Simultaneous edits to central files such as \texttt{cpu.v} and \texttt{control\_unit.v} 
+made merge conflicts likely, and certain changes introduced incompatibilities 
+that were not obvious until synthesis or hardware testing. 
+To address this, a stricter branching policy was adopted, 
+where only stable, tested changes were merged into shared branches. 
+This reduced the incidence of merge-related bugs and 
+helped maintain a working baseline for further development.
+
+\section*{DSP Substitution}
+
+One of the most difficult changes to implement proved to be the 
+implementation of the DSP blocks on the FPGA device.
+As mentioned in Section \ref{sec:Design_Description},
+previously the adder.v file had been very simple,
+implementing addition as shown below in Program \ref{prog:addition}.
+
+\begin{lstlisting}[style=verilog-style, caption=
+    {Initial adder.v module}, label={prog:addition}]
+module adder(input1, input2, out);
+	input [31:0]	input1;
+	input [31:0]	input2;
+	output [31:0]	out;
+
+	assign		out = input1 + input2;
+\end{lstlisting}
+
+In order to replace this, all of the parameters for the DSP had to be declared,
+either explicitly or by reverting to the assumed base values of the primitive.
+The information for this implementation largely came from the 
+DSP function usage guide \cite{DSP_guide}.
+Figure \ref{fig:dsp} in the Appendix displays a diagram from the guide 
+illustrating the structure of the DSP.
+The full adder.v module is shown in Program \ref{prog:DSP}
+in the Appendix.
+
+The primary difficulty with implementing this change came from 
+setting the parameters for the DSP.
+In the guide, there are examples provided displaying how to set up 
+the DSP for accumulators and multipliers, but not 32-bit adders.
+In the process of trying to implement this,
+a working system was acheived.
+There was a flashing light for both the \texttt{softwareblink}
+and \texttt{bubblesort} algorithms as desired.
+However, upon closer inspection, the pattern displayed by 
+the \texttt{bubblesort} algorithm had been altered.
+This was a result of setting the carry-out parameter incorrectly,
+only coming into effect partway through the sort 
+and thus making it much more difficult to spot.
+
+As this error was not spotted immediately, 
+other changes were made on top of this faulty logic.
+This resulted in more back tracking and rolling back commits via Git,
+until the root cause of the failure could be found.
 
 \section{Test Procedure}
 \label{sec:Test_Procedure}
@@ -509,11 +655,47 @@ is provided in Figure~\ref{fig:dspblock} in the Appendix.
 % Manual testing?
 % Git version control helping to keep track of affects on resource usage etc., ease of use
 
+My workflow initially consisted of running the various \texttt{Makefile}
+commands to initiate yosys and nextpnr, 
+synthesising our implementation and performing a place-and-route operation.
+I saved the reports from these operations to a .txt file, 
+allowing me to perform \textit{git diff} on the text file 
+from any of my commits to easily see the impact that each change had 
+on various elements of resource usage, as well as timing.
+I used a single command block to automate this workflow 
+to rapidly implement and track my changes, 
+which is shown below in Program \ref{prog:Workflow}.
+
+\begin{lstlisting}[language=bash,
+    caption={Workflow used to synthesise and record results},
+    label={prog:Workflow}]
+make clean && \
+make && \
+make install && \
+cd ../processor && \
+make > Resources.txt 2>&1 && \
+cd ../bubblesort
+\end{lstlisting}
+
+This proved instrumental to a quick and iterative development cycle, 
+allowing me to synthesise, place-and-route, and record results in a single step.
+This would form the basis of my workflow throughout the project.
+
+
 \section{Conclusion}
 \label{sec:Conclusion}
 % Conclusions and recommendations for further improvements in your design and evaluation
 % Use this section to provide a retrospective on how your team coordinated amongst yourselves
 % how that worked, and what you would do differently in the future (1-2 A4 sides)
+
+\begin{thebibliography}{9}
+
+\bibitem{DSP_guide}
+DSP usage. \textit{Technical Note TN1295: iCE40 DSP Function Usage Guide}. 
+2016. Available at: 
+\url{https://usermanual.wiki/Document/iCE4020DSPFunction20Usage20Guide.2104308747.pdf}
+
+\end{thebibliography}
 
 \newpage
 \appendix
@@ -689,5 +871,14 @@ module adder(input1, input2, is_sub, out);
     assign out = result;
 endmodule
 \end{lstlisting}
+
+\section{Diagrams}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{DNU/DSP_structure.png}
+    \caption{SB\_MAC16 block structure. Source: \cite{DSP_guide}}
+    \label{fig:dsp}
+\end{figure}
 
 \end{document}
