@@ -17,7 +17,7 @@
 \usepackage{lmodern} % For a professional-looking font (main body font)
 \usepackage{titlesec} % For title customization
 \usepackage{array} % For custom table formatting
-\usepackage[colorlinks=true, linkcolor=black, urlcolor=black]{hyperref} % Colored links without boxes
+\usepackage[colorlinks=true, linkcolor=black, citecolor=blue, urlcolor=blue]{hyperref} % Colored links without boxes
 \usepackage{cleveref} % For improved cross-referencing    
 \usepackage{multirow}
 \usepackage{enumitem}
@@ -372,7 +372,7 @@ this was expanded upon to make this approach more flexible and maintainable.
 The \texttt{mux2to1} assignment was expanded to support a parameterised width, 
 allowing the same module to be reused in other parts of the design 
 without hardcoding the bit width. 
-This is shown in Program \ref{prog:mux} below.
+This is shown in Program \ref{prog:mux} below. \cite{FPGA_optimization}
 
 \begin{lstlisting}[style=verilog-style, caption=
     {Generic width multiplexer}, label={prog:mux}]
@@ -486,7 +486,7 @@ CSRs are a core but optional component of the RISC-V architecture specification,
 primarily used to support privileged operations such as 
 trap handling, performance counters, environment configuration, and interrupt control. 
 In a full system, CSR instructions are essential for switching between user and machine 
-modes, managing exceptions, and interacting with the operating system.
+modes, managing exceptions, and interacting with the operating system. \cite{CSR}
 
 However, for the purposes of this project, none of the benchmark programs utilised 
 any CSR-related functionality. 
@@ -822,10 +822,21 @@ can be made markedly more efficient through careful hardware-aware engineering.
 
 \begin{thebibliography}{9}
 
+\bibitem{FPGA_optimization}
+Width parameter on the FPGA \textit{Optimizing Hardware for FPGAs}. Stitt Hub, 2023. 
+Available at: 
+\url{https://stitt-hub.com/optimizing-hardware-for-fpgas/}
+
+\bibitem{SoC_CSR_Safety} Basic CSR functionality.
+\textit{Functional Safety for Control and Status Registers}. 
+Electronic Design, 2024. Available at:  
+\href{https://www.electronicdesign.com/technologies/eda/article/55040504/arteris-ip-exploring-soc-design-control-and-status-registers-for-functional-safety}{https://www.electronicdesign.com}
+
 \bibitem{DSP_guide}
-DSP usage. \textit{Technical Note TN1295: iCE40 DSP Function Usage Guide}. 
+Basic DSP implementation on the iCE40. 
+\textit{DSP Function Usage Guide for iCE40 Devices}. 
 2016. Available at: 
-\url{https://usermanual.wiki/Document/iCE4020DSPFunction20Usage20Guide.2104308747.pdf}
+\href{https://usermanual.wiki/Document/iCE4020DSPFunction20Usage20Guide.2104308747.pdf}{https://usermanual.wiki/Document/iCE40\_Function\_Usage\_Guide.pdf}
 
 \end{thebibliography}
 
