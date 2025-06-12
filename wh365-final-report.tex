@@ -557,54 +557,61 @@ substantial savings were achieved without compromising correctness or functional
 
 A number of challenges were encountered throughout the optimisation process, 
 ranging from hardware limitations to software integration issues. 
-This section outlines the most significant obstacles and 
-the strategies used to address them,
-and perhaps more importantly what steps could be taken to mitigating
-them in the future.
+This section outlines the most significant obstacles, 
+the strategies used to address them, 
+and steps that could be taken to mitigate similar issues in future projects.
 
 \subsection*{Limited Access to Hardware}
 
 Only one FPGA board was available to the group, 
 which naturally restricted testing opportunities. 
-Since most changes could only be fully verified on physical hardware 
-by checking if an LED behaved as expected,
-this limitation often caused long delays between making a change 
-and receiving confirmation of success or failure. 
-Often functionality appeared intact through synthesis 
-but failed when deployed. 
-There were several instances early on in developement where 
-a series of changes were made to the implementation 
-without testing each one individually,
-only for the program to lack a core piece of functionality from an earlier commit
-meaning that more time would have to be spent debugging.
+This limitation often caused long delays between 
+implementing a change and receiving confirmation of success or failure. 
+While synthesis and place-and-route tools can flag syntax or timing issues, 
+they cannot guarantee correct functionality. 
+As a result, functionality sometimes appeared intact post-synthesis, 
+only to fail on deployment. 
+
+In several early cases, multiple untested commits were made sequentially 
+before the hardware could be tested. 
+This occasionally led to the discovery of regressions several commits 
+after they were introduced, requiring backtracking through Git 
+to isolate the root cause - 
+this was an inefficient and meandering process.
+
+A more sensible approach, which we began implementing towards the end,
+was to seperate every single untested change into a distinct branch.
+Whilst we had access to the hardware, we could implement our changes as before,
+testing each change as it was added,
+but when we were unable to check our changes 
+we would instead build from a known working point and branch off from there, 
+ensuring minimal risk of cascading failures.
+
+Unfortunately, this issue was especially prevalent with regard to the 
+performance-related modifications. Many of these involved deep changes 
+to pipelining and hazard handling logic, which were made in bulk 
+and committed before hardware testing could be completed. 
+When the LED blink output subsequently failed, it became difficult 
+to isolate which part of the update had caused the regression. 
+
+Despite significant effort spent debugging and attempting to reintegrate 
+these changes, the complexity and lack of intermediate validation 
+meant they could not be reliably restored within the project timeline. 
+As a result, several potential performance improvements were ultimately 
+abandoned to preserve stability in the final implementation.
 
 \subsection*{Lack of Formal Simulation}
+At the beginning of the project, little to no formal simulation was performed. 
+Instead, hardware testing was used as the main method of verification, 
+which meant even trivial bugs required full synthesis and flashing to detect. 
+This proved inefficient, especially when changes 
+affected multiple interconnected modules.
 
-At the beginning of the project, testing was done almost exclusively on hardware, 
-with no formal simulation or testbenches in place. 
-This meant many regressions were only caught after full synthesis and flashing, 
-which made debugging inefficient and slow. As the project progressed, 
-targeted simulation testbenches were created to validate key modules 
-such as the ALU and adder. 
-These helped reduce reliance on the board for initial verification and 
-caught issues earlier in the development process.
+A turning point came during the implementation of DSP block usage in the adder module. 
+This was one of the most technically challenging modifications, 
+as the baseline \texttt{adder.v} performed 32-bit 
+addition entirely using LUT-based logic. 
 
-\subsection*{Integration and Merging Difficulties}
-
-Given the distributed nature of development, 
-code integration occasionally introduced instability. 
-Simultaneous edits to central files such as \texttt{cpu.v} and \texttt{control\_unit.v} 
-made merge conflicts likely, and certain changes introduced incompatibilities 
-that were not obvious until synthesis or hardware testing. 
-To address this, a stricter branching policy was adopted, 
-where only stable, tested changes were merged into shared branches. 
-This reduced the incidence of merge-related bugs and 
-helped maintain a working baseline for further development.
-
-\section*{DSP Substitution}
-
-One of the most difficult changes to implement proved to be the 
-implementation of the DSP blocks on the FPGA device.
 As mentioned in Section \ref{sec:Design_Description},
 previously the adder.v file had been very simple,
 implementing addition as shown below in Program \ref{prog:addition}.
@@ -628,24 +635,45 @@ illustrating the structure of the DSP.
 The full adder.v module is shown in Program \ref{prog:DSP}
 in the Appendix.
 
-The primary difficulty with implementing this change came from 
-setting the parameters for the DSP.
-In the guide, there are examples provided displaying how to set up 
-the DSP for accumulators and multipliers, but not 32-bit adders.
-In the process of trying to implement this,
-a working system was acheived.
-There was a flashing light for both the \texttt{softwareblink}
-and \texttt{bubblesort} algorithms as desired.
-However, upon closer inspection, the pattern displayed by 
-the \texttt{bubblesort} algorithm had been altered.
-This was a result of setting the carry-out parameter incorrectly,
-only coming into effect partway through the sort 
-and thus making it much more difficult to spot.
+Substituting in the SB\_MAC16 primitive required careful parameter configuration 
+and correct wiring of carry chains between the top and bottom halves of the DSP. 
+Unfortunately, official documentation lacked clear examples for 32-bit adders, 
+leading to misconfigured carry propagation.
 
-As this error was not spotted immediately, 
-other changes were made on top of this faulty logic.
-This resulted in more back tracking and rolling back commits via Git,
-until the root cause of the failure could be found.
+Although the updated adder passed hardware tests with simple programs like 
+\texttt{softwareblink}, it silently failed on \texttt{bubblesort}, 
+producing incorrect output patterns partway through execution. 
+Because the bug was subtle and did not manifest immediately, 
+it evaded detection until several unrelated changes had been committed on top. 
+This triggered significant debugging effort, including rolling back 
+and isolating the root cause.
+
+To avoid similar issues in future edits, module-level simulation was adopted. 
+Testbenches were created for units such as the ALU and adder, 
+which enabled more reliable verification without needing hardware access. 
+Although coverage remained limited, this approach caught issues 
+earlier in development and dramatically reduced the turnaround time 
+for identifying functional errors.
+
+This experience highlighted the value of incorporating simulation early, 
+especially when working with lower-level FPGA primitives where 
+subtle misconfigurations can lead to difficult-to-trace bugs.
+
+\subsection*{Integration and Merging Difficulties}
+Working in parallel across multiple branches 
+introduced challenges when merging changes. 
+Key files such as \texttt{cpu.v} and \texttt{control\_unit.v} 
+were edited by multiple team members, 
+frequently leading to merge conflicts or subtle behavioural bugs. 
+The difficulty was exacerbated by the tight coupling 
+between datapath and control logic, 
+which meant that even small changes could have unexpected ripple effects.
+
+To mitigate this, a more disciplined Git workflow was adopted. 
+Changes were tested individually and only merged 
+into shared branches after validation. 
+This reduced regressions and provided a stable baseline 
+for collaborative development.
 
 \section{Test Procedure}
 \label{sec:Test_Procedure}
