@@ -383,7 +383,7 @@ without hardcoding the bit width.
 This is shown in Program \ref{prog:mux} below.
 
 \begin{lstlisting}[style=verilog-style, caption=
-    {Fixed-width 11-bit multiplexer}, label={prog:mux}]
+    {Generic width multiplexer}, label={prog:mux}]
 module mux2to1_param #(parameter WIDTH = 32)
 ( // Example instantiation: mux2to1_param #(.WIDTH(32))
     input  [WIDTH-1:0] input0,
@@ -412,6 +412,81 @@ and improve timing further, but this was not worked out.
 
 \subsection{DSP Substitution}
 \label{sec:DSP}
+
+Another important optimisation involved offloading arithmetic logic 
+from general-purpose logic cells to dedicated DSP blocks on the FPGA. 
+In the baseline implementation, the adder logic used for core operations 
+such as basic arithmetic and branch comparisons was fully implemented in LUT-based logic, 
+consuming a significant number of logic cells and contributing to routing congestion. 
+
+To address this, the adder was restructured around 
+the iCE40-specific \texttt{SB\_MAC16} primitive, 
+which provides integrated adder functionality
+along with a few other unused functions. 
+
+In order to shift arithmetic operations over to the DSP,
+the \texttt{SB\_MAC16} has to be explicitly declared,
+otherwise the synthesis tools will just use general purpose LUTs instead.
+This was implemented in the \texttt{adder.v} module, 
+where the 32-bit operands were split into upper and lower 16-bit segments 
+and mapped to the DSP's internal A, B, C, and D inputs. 
+Parameterisation via \texttt{defparam} was used to configure the carry chain 
+and data routing between the top and bottom halves of the DSP.
+This is displayed in Program \ref{prog:DSP} in the Appendix.
+
+This module was then instantiated within the ALU, allowing RISC-V instructions 
+that required add or subtract operations to route through the DSP instead 
+of a traditional behavioural adder. 
+In order to implement addition, initially a wire was created that could
+hold the 2s complement of a wire, as shown below in Program \ref{prog:2s_complement}.
+
+\begin{lstlisting}[style=verilog-style, caption=
+    {2s compliment}, label={prog:2s_complement}]
+wire [31:0] B_neg = ~B + 1;
+\end{lstlisting}
+
+However, this unnecessarily increased complexity, and so instead
+The control signal \texttt{is\_sub} was added to dynamically toggle between 
+addition and subtraction by setting the 
+\texttt{ADDSUBTOP} and \texttt{ADDSUBBOT} inputs. 
+
+This is then instantiated in module \texttt{alu.v}
+as shown below in Program \ref{prog:alu} below.
+
+\begin{lstlisting}[style=verilog-style, caption=
+    {is\_sub implementation within alu.v}, label={prog:alu}]
+/*
+ *	ADD
+ */
+`kSAIL_MICROARCHITECTURE_ALUCTL_3to0_ADD:	begin
+	do_sub = 1'b0;
+	ALUOut = add_result;
+end
+/*
+ *	SUBTRACT
+ */
+`kSAIL_MICROARCHITECTURE_ALUCTL_3to0_SUB:	begin
+	do_sub = 1'b1;
+	ALUOut = add_result;
+end
+\end{lstlisting}
+
+\iffalse
+Initial problems with carry over
+\fi
+Following this change, logic cell usage was reduced by 94 LUTs, 
+at the cost of 3 out of 8 available DSP blocks. 
+As mentioned in Section \ref{sec:Introduction},
+this increase in the usage of DSPs is not a negative,
+as they are fixed hardware components with few other uses.
+Shifting the simple arithmetic operations from 
+far more malleable LUT and flip-flops over to the specialised DSPs
+not only expands the capacity for software complexity on the board
+but also improves the performance,
+as DSPs are optimised for fast arithmetic calculations.
+
+A simplified diagram illustrating the data path through the DSP adder 
+is provided in Figure~\ref{fig:dspblock} in the Appendix.
 
 \subsection{CSR}
 \label{sec:CSR}
@@ -555,6 +630,63 @@ module mux2to1_11bit(input0, input1, select, out);
 	output [10:0]	out;
 
 	assign out = (select) ? input1 : input0;
+endmodule
+\end{lstlisting}
+
+\begin{lstlisting}[style=verilog-style, caption=
+    {DSP implementation in adder.v}, label={prog:DSP}]
+module adder(input1, input2, is_sub, out);
+    input  [31:0] input1;
+    input  [31:0] input2;
+    input         is_sub;
+    output [31:0] out;
+
+    wire [31:0] result;
+    wire        carry_out;
+
+    SB_MAC16 i_sbmac16 (
+        .A(input1[31:16]),  
+        .B(input1[15:0]),  
+        .C(input2[31:16]), 
+        .D(input2[15:0]),  
+        .O(result),
+        .CLK(1'b0),
+        .CE(1'b1),
+        .IRSTTOP(1'b0), 
+        .IRSTBOT(1'b0),
+        .ORSTTOP(1'b0), 
+        .ORSTBOT(1'b0),
+        .AHOLD(1'b0), 
+        .BHOLD(1'b0),
+        .CHOLD(1'b0), 
+        .DHOLD(1'b0),
+        .OHOLDTOP(1'b0),
+        .OHOLDBOT(1'b0),
+        .OLOADTOP(1'b0), 
+        .OLOADBOT(1'b0),
+        .ADDSUBTOP(is_sub), 
+        .ADDSUBBOT(is_sub),
+        .CO(carry_out),
+        .CI(1'b0), 
+        .ACCUMCI(1'b0),
+        .ACCUMCO(), 
+        .SIGNEXTIN(1'b0), 
+        .SIGNEXTOUT()
+    );
+
+    // ---- DSP Configuration using defparam ----
+    defparam i_sbmac16.TOPADDSUB_LOWERINPUT         = 2'b00;  // A
+    defparam i_sbmac16.TOPADDSUB_UPPERINPUT         = 1'b1;   // C
+    defparam i_sbmac16.TOPADDSUB_CARRYSELECT        = 2'b11;  // Carry from BOT
+    defparam i_sbmac16.BOTOUTPUT_SELECT             = 2'b00;  // Bot adder output
+    defparam i_sbmac16.BOTADDSUB_LOWERINPUT         = 2'b00;  // B
+    defparam i_sbmac16.BOTADDSUB_UPPERINPUT         = 1'b1;   // D
+    defparam i_sbmac16.BOTADDSUB_CARRYSELECT        = 2'b00;  // No carry-in
+    defparam i_sbmac16.MODE_8x8                     = 1'b0;
+    defparam i_sbmac16.A_SIGNED                     = 1'b0;
+    defparam i_sbmac16.B_SIGNED                     = 1'b0;
+
+    assign out = result;
 endmodule
 \end{lstlisting}
 
