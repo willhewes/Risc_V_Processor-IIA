@@ -118,7 +118,7 @@ This report is the final report for this project.
 
 In the first report we evaluated three programs as a baseline against
 which our improvements could be compared.
-The first of these three porgrams was \texttt{hardwareblink},
+The first of these three programs was \texttt{hardwareblink},
 a program which relied purely on combinational and sequential logic
 to blink an LED on the FPGA,
 bypassing the processor core entirely. 
@@ -147,7 +147,7 @@ allowing us to push the processor further,
 offering a more representative view of our design.
 It should be noted the other programs were still tested
 to ensure functionality and check progress,
-they were just less emblematic of our implementaions capabilities.
+they were just less emblematic of our implementations capabilities.
 
 The baseline implementation on the FPGA showed several inefficiencies 
 in its core design and made poor use of 
@@ -164,7 +164,7 @@ Because almost everything in the design depends on logic cells in some way,
 reducing how many are used was the main goal throughout the project.
 The changes that directly improved LC usage primarily came from
 cleaning up registers, wires, and other redundant logic where possible.
-One noteable example of this was reducing a multiplexing wire signal
+One notable example of this was reducing a multiplexing wire signal
 from 32 bits down to 11 bits. These examples will be discussed in more detail
 in the body of the report.
 
@@ -461,7 +461,7 @@ In order to implement addition, initially a wire was created that could
 hold the 2s complement of a wire, as shown below in Program \ref{prog:2s_complement}.
 
 \begin{lstlisting}[style=verilog-style, caption=
-    {2s compliment}, label={prog:2s_complement}]
+    {2s complement}, label={prog:2s_complement}]
 wire [31:0] B_neg = ~B + 1;
 \end{lstlisting}
 
@@ -620,7 +620,7 @@ to isolate the root cause -
 this was an inefficient and meandering process.
 
 A more sensible approach, which we began implementing towards the end,
-was to seperate every single untested change into a distinct branch,
+was to separate every single untested change into a distinct branch,
 using version control to its fullest extent.
 When we had access to the hardware, we could implement our changes as before,
 testing each change as it was added,
@@ -725,7 +725,7 @@ for collaborative development.
 % Testing procedure automated flow
 % Test on bubblesort and software
 % Manual testing?
-% Git version control helping to keep track of affects on resource usage etc., ease of use
+% Git version control helping to keep track of effects on resource usage etc., ease of use
 
 \subsection*{Primary Workflow}
 My workflow initially consisted of running the various \texttt{Makefile}
@@ -758,7 +758,7 @@ By analysing the output text file, changes to resource utilisation
 could be quickly tracked to see what affect minor adjustments to the code may cause.
 Additionally, it allowed for comparisons with performance,
 enabling quick and informed decisions to be made regarding which changes 
-would be worth persuing.
+would be worth pursuing.
 
 \subsection*{Validation of Changes}
 
@@ -797,10 +797,10 @@ This allowed experimental changes to be validated in isolation
 before being merged back into the main branch. 
 If errors were later discovered, \texttt{git bisect} and 
 commit-by-commit testing helped identify which change had introduced the issue,
-simplifiying and speeding up the debugging process.
+simplifying and speeding up the debugging process.
 
 Automating synthesis and using Git made it easy to test changes quickly and reliably, 
-without losing track of progress when chanes were unsuccessfully implemented.
+without losing track of progress when changes were unsuccessfully implemented.
 
 \section{Conclusion}
 \label{sec:Conclusion}
@@ -936,7 +936,7 @@ Basic DSP implementation on the iCE40.
         DSP blocks (\texttt{ICESTORM\_DSP}) & 0 / 8 & 0\,\% \\
         \bottomrule
     \end{tabularx}
-    \caption{Report after ammending the multiplexing syntax to be variable width}
+    \caption{Report after amending the multiplexing syntax to be variable width}
     \label{tab:Mux}
 \end{table}
 
