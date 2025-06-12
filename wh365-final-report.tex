@@ -112,7 +112,7 @@ The overarching aim is to optimise
 the processor design with respect to its 
 performance, power dissipation, and resource usage, 
 while balancing trade-offs between these three aspects. 
-Each team member is responsible for focusing on one of the three aspects
+Each team member is responsible for focusing on one of the three aspects,
 and my reports focus on the resource usage of the design.
 This report is the final report for this project.
 
@@ -128,13 +128,16 @@ which performed the same task but instead implemented through software,
 utilising the sail-core processor.
 As a result, the design used a much larger number of logic cells,
 and also introduced the usage of a few other primitive cells such as 
-block RAMs and DSP blocks.
+block RAMs and global buffers.
 The final program was \texttt{bubblesort}, which would perform a 
-bubblesort algorithm and blink the LED to confirm it was finished.
+bubblesort algorithm and blink the LED in a pattern
+corresponding to its sorting process.
 Due to the increased complexity of the program,
 the logic cell utilisation was greater than for \texttt{softwareblink},
-but crucially the other primitives did not increase, 
-as they relied primarily on their design within the verilog files.
+but crucially the other primitives such as 
+block RAMs and DSPs did not increase between programs,
+as their usage is fixed by how they are instantiated in the Verilog design, 
+rather than varying with program complexity.
 The final test would be to process 
 a new, unseen program under our implementation and evaluate it for its 
 resource usage, performance and power dissipation.
@@ -149,8 +152,8 @@ they were just less emblematic of our implementaions capabilities.
 The baseline implementation on the FPGA showed several inefficiencies 
 in its core design and made poor use of 
 some of the resources available on the board. 
-Before describing the changes made, it's helpful to briefly explain 
-what those resources are and how they affect the processor.
+Before outlining the changes made, it's useful to first explain 
+what these resources are and how they influence the processor's behaviour.
 
 Logic cells, or LCs, are the basic building blocks used to 
 implement logic on the FPGA. 
@@ -171,7 +174,21 @@ on the microprocessor.
 This means that whereas LCs will increase and potentially become limiting
 for a particularly complex program, 
 other primitives such as block RAMs, DSP registers, and buffers
-will not increase outside of the capacity of the board if designed properly.
+will not dynamically increase outside of 
+the capacity of the board if designed appropriately.
+
+DSP blocks are specialised units designed for fast arithmetic. 
+Instead of building adders and multipliers out of regular logic, 
+the FPGA provides a few dedicated DSP blocks that are faster and use less space. 
+The baseline design didn't use any of these, 
+relying entirely on logic cells even for basic addition. 
+One of the most significant alterations to the base implementation
+was forcing the \textit{adder.v} module to make use of these DSP blocks
+for addition and subtraction, 
+freeing up LUTs to be used in more sophisticated logic.
+Implementing this change reduced the LC usage by 94, 
+utilising 3 of the 8 DSP blocks available,
+leaving room for further expansion.
 
 Block RAMs are small dedicated memory blocks built into the FPGA. 
 They're useful when a design needs to store more data 
@@ -184,24 +201,28 @@ the number of block RAMs used was reduced
 from 20 to 12 of the 30 available,
 meaning that more memory functions could be moved to the RAM 
 in order to preserve logic cells.
-Unfortunately these changes could not be implemented due to time constraints,
-but the plan was to ...
+Although time constraints prevented further exploitation of this freed-up memory,
+several changes were planned to take advantage of the available space and 
+further reduce logic usage. 
+These included simplifying large logic blocks 
+using Verilog \texttt{generate} statements to reduce code duplication, 
+sharing comparator logic in the forwarding unit to cut down on redundant circuitry, 
+cleaning up control signal wiring around the register file, 
+and offloading additional arithmetic operations to the FPGA's DSP blocks. 
+These modifications, if implemented, would help reduce pressure on logic cells 
+and potentially improve both timing and power efficiency.
 
-DSP blocks are specialised units designed for fast arithmetic. 
-Instead of building adders and multipliers out of regular logic, 
-the FPGA provides a few dedicated DSP blocks that are faster and use less space. 
-The baseline design didn't use any of these, 
-relying entirely on logic cells even for basic addition. 
-One of the most significant alterations to the base implementation
-was forcing the \textit{adder.v} to make use of these DSP blocks
-for addition and subtraction, 
-freeing up LUTs to be used in more sophisticated logic.
-Implementing this change reduced the LC usage by ..., 
-at the expense of 3 of the 8 DSP blocks available,
-leaving room for further improvement in this regard.
-
-In addition to these changes that were successfully implemented,
-there are many that ...
+In addition to these changes that were successfully implemented, 
+there are many that could not be pursued within the time constraints 
+of the project. These include more aggressive pipelining of the 
+execution stages, a partial redesign of the register file interface, 
+and further refinement of control logic to reduce signal fanout. 
+While these ideas remain untested, they represent promising 
+avenues for future exploration, particularly in balancing 
+resource usage with performance and scalability. 
+The following sections provide a detailed breakdown of 
+the changes that were implemented, their technical justification, 
+and the impact each had on the final design.
 
 \newpage
 
@@ -215,25 +236,20 @@ As I was initially unfamiliar with processor and FPGA design at this level,
 the early stages of the project were spent working through the course material 
 and exploring online resources to build a clearer understanding of 
 where changes could be most effectively targeted. 
-This initial research was followed by a series of small, 
-hands-on changes to the Verilog code, 
+This initial research was followed by a series of small 
+changes to the Verilog code, 
 helping build familiarity with the processor's structure and behaviour.
 In hindsight, these early edits were made 
-without a broader design strategy in place, 
+without a proper testing procedure in place, 
 but they laid the groundwork for a more focused and informed optimisation approach 
 that developed as the project progressed.
 This unstructured approach naturally led to a few early mistakes, 
-such as unintentionally breaking functionality or introducing hard-to-trace bugs.
+such as unintentionally breaking functionality or introducing hard to trace bugs.
 These mistakes will be discussed more in Section \ref{sec:Problems_Encountered}.
 These issues highlighted the need for a more disciplined workflow, 
 which later included stricter version control, 
 more careful integration with other modules, 
 and simulations to verify that signals behaved as expected after changes.
-
-As a team we worked together through git, allowing us to collaborate effectively.
-We set up different branches from the \texttt{main} for each of us to use, 
-with the plan being that we would work on some changes independently 
-and then merge our changes cohesively.
 
 A significant part of the optimisation process involved 
 carefully examining the Verilog source files to understand 
@@ -247,25 +263,33 @@ were functionally active during execution.
 Pattern-matching tools like \texttt{grep} were used extensively 
 to locate signal definitions and check bit widths, 
 while simple simulation testbenches were created to verify specific behaviours,
-most notably during the beleaguered formulation of the DSP blocks.
+most notably during the laboured construction of the DSP blocks.
 These methods helped build a reliable picture of the design's internal behaviour 
 and revealed opportunities to safely eliminate or simplify hardware blocks 
 without compromising core functionality.
 
-After using these methods to identify and eliminate innefficiencies within the code,
-these changes would be uploaded to git for integration with the other branches,
-allowing us to work independently on our seperate focus and
-providing an easy way to handle merge conflicts.
+As a team, we collaborated using Git, 
+setting up individual branches for each member to work 
+on their specific optimisation focus. 
+This allowed us to implement and test changes independently,
+while maintaining a clean and stable main branch. 
+Once inefficiencies were identified and addressed within a branch, 
+the updates could be merged cohesively with others. 
+This workflow not only supported parallel development 
+but also helped manage merge conflicts more effectively as the project progressed.
 
 Unfortunately, this is another aspect where planning would have made a significant
 improvement to our working procedure. 
-As there was only one FPGA, our individual changes would be applied and
+As there was only one FPGA, testing our designs on the board was not always possible,
+so our individual changes would be applied and
 though they would successfully synthesise and be routed,
 often the functionality would be broken and we would be unable to tell until 
 the code could be tested on the FPGA when we would all meet again.
 This meant that much of our time was spent working on changes that would 
 need to be extensively debugged, and unfortunately many of these initial changes
-would in the end remain unimplemented due to time constraints.
+would in the end remain unimplemented due to time constraints,
+most notably the pipelining changes within the 
+\textit{adder.v} and \textit{alu.v} modules.
 
 \section{Design Description}
 \label{sec:Design_Description}
@@ -284,7 +308,7 @@ some changes also impacted the usage of other board primitives
 such as block RAMs and DSP blocks. 
 
 Each optimisation was applied as discussed in earlier sections,
-incrementally and tracked using Git, 
+incrementally applied and tracked using Git, 
 with synthesis reports logged at every stage to assess their effect. 
 The following subsections outline each of these changes, 
 along with their motivation, implementation, and observed impact. 
@@ -302,14 +326,14 @@ resulting in wasted transitions and toggling of downstream logic even
 when no useful computation was occurring.
 
 To address this, support for gated updates to the program counter was introduced. 
-This involved modifying the \texttt{program\_counter.v} module to accept 
+This involved modifying the \textit{program\_counter.v} module to accept 
 a new \texttt{write\_enable} signal, 
 allowing updates to be conditionally applied only when 
 pipeline progression was required. 
-The \texttt{cpu.v} module was updated to assert this signal whenever 
+The \textit{cpu.v} module was updated to assert this signal whenever 
 the \texttt{stall} flag was low, 
 ensuring that the PC would remain stable during pipeline stalls. 
-The signal was then routed through \texttt{top.v} to maintain module connectivity.
+The signal was then routed through \textit{top.v} to maintain module connectivity.
 
 This change primarily aimed to reduce dynamic power dissipation by 
 avoiding unnecessary switching in the PC logic. 
@@ -319,7 +343,7 @@ it represents an important step in selectively controlling register updates.
 It also clarified the flow of stall logic through the processor 
 and established a cleaner separation between control and datapath behaviour. 
 
-One trade-off, however, was a slight increase in global buffer (GB) usage, 
+One trade-off was a slight increase in global buffer (GB) usage, 
 rising from 5 to 6 out of the 8 available on the iCE40 device. 
 Global buffers are specialised routing resources used to 
 distribute high-fanout signals - 
@@ -363,16 +387,16 @@ generic 32-bit \texttt{mux2to1}.
 The change required updating the 
 module instantiation and associated wiring, 
 but left the logic semantics unchanged.
-This initial segment of code is shown in Program \ref{prog:mux_11bit}
+This initial implementation is shown in Program \ref{prog:mux_11bit}
 in the Appendix for completeness.
 
 After implementing this successful change, 
 reducing logic cell usage but maintaining functionality of the program,
-this was expanded upon to make this approach more flexible and maintainable.
+this was expanded upon to make this approach more flexible.
 The \texttt{mux2to1} assignment was expanded to support a parameterised width, 
 allowing the same module to be reused in other parts of the design 
-without hardcoding the bit width. 
-This is shown in Program \ref{prog:mux} below. \cite{FPGA_optimization}
+without hardcoding the bit width. \cite{FPGA_optimization}
+This is shown in Program \ref{prog:mux} below.
 
 \begin{lstlisting}[style=verilog-style, caption=
     {Generic width multiplexer}, label={prog:mux}]
@@ -387,6 +411,9 @@ module mux2to1_param #(parameter WIDTH = 32)
 endmodule
 \end{lstlisting}
 
+This allows bit widths to be specified for each instantiation
+of the multiplexing operation,
+reducing redundancy in the assignment of wires and registers.
 This improvement reduced logic cell usage by 25 LUTs, as shown in 
 Table \ref{tab:Mux} in the Appendix.
 
@@ -400,7 +427,7 @@ producing an unnaccounted for reduction in delay of 10\%.
 In the future, this consequence would have to be probed further
 to determine the root cause, but due to time constraints this was not possible.
 There may be a more optimal configuration that could reduce resource usage
-and improve timing further, but this was not worked out.
+and improve timing further, but this was not fully explored.
 
 \subsection{DSP Substitution}
 \label{sec:DSP}
@@ -408,18 +435,19 @@ and improve timing further, but this was not worked out.
 Another important optimisation involved offloading arithmetic logic 
 from general-purpose logic cells to dedicated DSP blocks on the FPGA. 
 In the baseline implementation, the adder logic used for core operations 
-such as basic arithmetic and branch comparisons was fully implemented in LUT-based logic, 
+such as basic arithmetic and branch comparisons 
+was fully implemented in LUT-based logic, 
 consuming a significant number of logic cells and contributing to routing congestion. 
 
-To address this, the adder was restructured around 
-the iCE40-specific \texttt{SB\_MAC16} primitive, 
-which provides integrated adder functionality
-along with a few other unused functions. 
+To address this, the adder was restructured to use the 
+\texttt{SB\_MAC16} primitive provided by the iCE40 FPGA, 
+which includes dedicated adder functionality alongside 
+additional capabilities that were not utilised in this implementation.
 
 In order to shift arithmetic operations over to the DSP,
 the \texttt{SB\_MAC16} has to be explicitly declared,
 otherwise the synthesis tools will just use general purpose LUTs instead.
-This was implemented in the \texttt{adder.v} module, 
+This was implemented in the \textit{adder.v} module, 
 where the 32-bit operands were split into upper and lower 16-bit segments 
 and mapped to the DSP's internal A, B, C, and D inputs. 
 Parameterisation via \texttt{defparam} was used to configure the carry chain 
@@ -427,8 +455,8 @@ and data routing between the top and bottom halves of the DSP.
 This is displayed in Program \ref{prog:DSP} in the Appendix.
 
 This module was then instantiated within the ALU, allowing RISC-V instructions 
-that required add or subtract operations to route through the DSP instead 
-of a traditional behavioural adder. 
+that required add operations to route through the DSP instead 
+of a combinational adder. 
 In order to implement addition, initially a wire was created that could
 hold the 2s complement of a wire, as shown below in Program \ref{prog:2s_complement}.
 
@@ -438,11 +466,12 @@ wire [31:0] B_neg = ~B + 1;
 \end{lstlisting}
 
 However, this unnecessarily increased complexity, and so instead
-The control signal \texttt{is\_sub} was added to dynamically toggle between 
+the control signal \texttt{is\_sub} was added to dynamically toggle between 
 addition and subtraction by setting the 
-\texttt{ADDSUBTOP} and \texttt{ADDSUBBOT} inputs. 
+\texttt{ADDSUBTOP} and \texttt{ADDSUBBOT} inputs
+within the \texttt{SB\_MAC16}. 
 
-This is then instantiated in module \texttt{alu.v}
+This is then instantiated in module \textit{alu.v}
 as shown below in Program \ref{prog:alu} below.
 
 \begin{lstlisting}[style=verilog-style, caption=
@@ -467,7 +496,8 @@ Following this change, logic cell usage was reduced by 94 LUTs,
 at the cost of 3 out of 8 available DSP blocks. 
 As mentioned in Section \ref{sec:Introduction},
 this increase in the usage of DSPs is not a negative,
-as they are fixed hardware components with few other uses.
+as they are fixed hardware components
+that would otherwise remain unused.
 Shifting the simple arithmetic operations from 
 far more malleable LUT and flip-flops over to the specialised DSPs
 not only expands the capacity for software complexity on the board
@@ -475,7 +505,7 @@ but also improves the performance,
 as DSPs are optimised for fast arithmetic calculations.
 
 A simplified diagram illustrating the data path through the DSP adder 
-is provided in Figure~\ref{fig:dspblock} in the Appendix.
+is provided in Figure~\ref{fig:dsp} in the Appendix.
 
 \subsection{CSR}
 \label{sec:CSR}
@@ -486,7 +516,8 @@ CSRs are a core but optional component of the RISC-V architecture specification,
 primarily used to support privileged operations such as 
 trap handling, performance counters, environment configuration, and interrupt control. 
 In a full system, CSR instructions are essential for switching between user and machine 
-modes, managing exceptions, and interacting with the operating system. \cite{CSR}
+modes, managing exceptions, 
+and interacting with the operating system. \cite{CSR}
 
 However, for the purposes of this project, none of the benchmark programs utilised 
 any CSR-related functionality. 
@@ -495,51 +526,49 @@ the highest privilege level defined in the RISC-V specification.
 In this simplified configuration, 
 there was no support for exception handling, privilege escalation, 
 or multiple execution contexts. 
-As a result, the Control and Status Register (CSR) subsystem - 
-which is primarily intended for use in operating systems and trap handling - 
-was never accessed during execution and could be safely removed 
-without impacting functionality.
+As none of these CSR features - 
+such as interrupt detection, configuration control, or capability reporting - 
+were used by the benchmark programs, 
+the CSR subsystem was never accessed during execution 
+and could be safely removed without impacting functionality.
 Despite this, the baseline implementation included a fully 
 integrated CSR register file backed by block RAM, associated decode logic in the 
 control unit, and forwarding and hazard-handling support for CSR instructions.
 
-This was identified as a redundant functionality by ,,,, 
+This was identified as redundant after checking that 
+CSR logic was never triggered during program execution. 
 Initial attempts at removal simply set 
 all the relevant function codes and carrier signals to zero,
-introducing dummy wires to ensure the CSR logic was called without breaking anything.
+introducing dummy wires to ensure the CSR logic was removed without 
+making largescale changes.
 This is demonstrated in Program \ref{prog:CSR} below,
 displaying one instance in which the CSR logic was initially nullified.
 
 \begin{lstlisting}[style=verilog-style, caption=
-    {Short example of eliminating CSR logic}, label={prog:CSR}]
+    {Short example of nullifying CSR logic}, label={prog:CSR}]
 	wire			CSRR_signal = 1'b0;
 	wire			CSRRI_signal = 1'b0;
 \end{lstlisting}
 
-Eventually, any reference to CSR was simply removed,
-using \texttt{grep} as mentioned earlier to identify
-any intance where CSR was called and remove it.
-This took a few attempts, as CSR logic was written throughout the system structure,
-meaning that its removal would prove very effective at optimising resource usage.
-CSR logic was removed from all defines files, any ALU logic,
-the control and forwarding units, the CPU, 
-and the CSR.v file was removed.
+Eventually, all references to CSR were removed using \texttt{grep} 
+to locate each instance across the codebase. 
+Because CSR logic was spread throughout the design - 
+including the defines files, ALU, control unit, forwarding logic, and CPU - 
+this process required several passes to fully clean up. 
+The dedicated \textit{csr.v} module was also deleted, 
+completing the removal and yielding a meaningful reduction in resource usage.
 
 Removing the CSR logic significantly simplified the processor architecture and 
-yielded one of the largest resource reductions in the entire project. 
+yielded the largest resource reductions in the entire project. 
 The CSR register file alone occupied 8 of the 30 
 available block RAMs on the iCE40 device, 
 and its associated decode, hazard handling, 
 and forwarding logic introduced considerable 
 complexity into the control and execution paths. 
-By eliminating this subsystem entirely -
-removing references from the ALU, control unit, 
-forwarding logic, CPU, and all the defines - 
-the design achieved a reduction of approximately 251 logic cells and 8 block RAMs, 
+By eliminating this subsystem entirely 
+the design achieved a reduction of 251 logic cells and 8 block RAMs, 
 as reflected in Tables \ref{tab:modification_reductions} and 
 \ref{tab:CSR} in the Appendix. 
-This change also introduced a minor increase in global buffer usage, 
-as removing the CSR subsystem altered control signal routing and clock enable logic.
 These gains not only freed critical resources, 
 but also opened the door for relocating other memory elements into block RAM in future, 
 improving the flexibility of the implementation. 
@@ -547,6 +576,15 @@ This change exemplifies the benefit of tailoring
 FPGA designs to their target workloads: 
 by removing unused ISA features like CSR support
 substantial savings were achieved without compromising correctness or functionality.
+This change also introduced a minor increase in global buffer usage, 
+as removing the CSR subsystem altered control signal routing and clock enable logic.
+
+Looking ahead, the resources freed by CSR removal created opportunities for further optimisation. 
+In particular, additional arithmetic operations could be shifted onto the remaining DSP blocks, 
+reducing pressure on LUT-based logic. 
+Similarly, with block RAM usage significantly reduced, 
+some logic structures or lookup tables could be restructured to use memory elements instead, 
+freeing up logic cells and potentially improving timing and power efficiency.
 
 \section{Problems Encountered}
 \label{sec:Problems_Encountered}
@@ -556,49 +594,54 @@ substantial savings were achieved without compromising correctness or functional
 % Inability to test LED always due to Cheng having it, less flexibility?
 
 A number of challenges were encountered throughout the optimisation process, 
-ranging from hardware limitations to software integration issues. 
+ranging from debugging difficulties to integration issues. 
 This section outlines the most significant obstacles, 
 the strategies used to address them, 
 and steps that could be taken to mitigate similar issues in future projects.
 
 \subsection*{Limited Access to Hardware}
 
+Hardware testing was an essential part of the validation process, 
+but it came with several practical constraints. 
 Only one FPGA board was available to the group, 
 which naturally restricted testing opportunities. 
-This limitation often caused long delays between 
+This limitation often caused delays between 
 implementing a change and receiving confirmation of success or failure. 
 While synthesis and place-and-route tools can flag syntax or timing issues, 
-they cannot guarantee correct functionality. 
+they could not guarantee correct functionality. 
 As a result, functionality sometimes appeared intact post-synthesis, 
-only to fail on deployment. 
+only to fail on deployment at a later testing point. 
 
 In several early cases, multiple untested commits were made sequentially 
 before the hardware could be tested. 
-This occasionally led to the discovery of regressions several commits 
+This led to the uncovering of errors in several commits 
 after they were introduced, requiring backtracking through Git 
 to isolate the root cause - 
 this was an inefficient and meandering process.
 
 A more sensible approach, which we began implementing towards the end,
-was to seperate every single untested change into a distinct branch.
-Whilst we had access to the hardware, we could implement our changes as before,
+was to seperate every single untested change into a distinct branch,
+using version control to its fullest extent.
+When we had access to the hardware, we could implement our changes as before,
 testing each change as it was added,
 but when we were unable to check our changes 
 we would instead build from a known working point and branch off from there, 
 ensuring minimal risk of cascading failures.
 
 Unfortunately, this issue was especially prevalent with regard to the 
-performance-related modifications. Many of these involved deep changes 
+performance-related modifications made at the start of the project. 
+Many of these involved deep changes 
 to pipelining and hazard handling logic, which were made in bulk 
-and committed before hardware testing could be completed. 
+and committed before hardware testing was properly completed. 
 When the LED blink output subsequently failed, it became difficult 
-to isolate which part of the update had caused the regression. 
+to isolate which part of the update had caused the lapse in functionality. 
 
 Despite significant effort spent debugging and attempting to reintegrate 
 these changes, the complexity and lack of intermediate validation 
 meant they could not be reliably restored within the project timeline. 
 As a result, several potential performance improvements were ultimately 
-abandoned to preserve stability in the final implementation.
+abandoned to preserve stability in the final implementation,
+notably much of the planned changes to pipelining.
 
 \subsection*{Lack of Formal Simulation}
 At the beginning of the project, little to no formal simulation was performed. 
@@ -608,13 +651,11 @@ This proved inefficient, especially when changes
 affected multiple interconnected modules.
 
 A turning point came during the implementation of DSP block usage in the adder module. 
-This was one of the most technically challenging modifications, 
-as the baseline \texttt{adder.v} performed 32-bit 
-addition entirely using LUT-based logic. 
-
+This was one of the most technically challenging modifications.
 As mentioned in Section \ref{sec:Design_Description},
-previously the adder.v file had been very simple,
-implementing addition as shown below in Program \ref{prog:addition}.
+previously the \textit{adder.v} file had been very simple,
+implementing addition as shown below in Program \ref{prog:addition},
+relying on a combinational adder.
 
 \begin{lstlisting}[style=verilog-style, caption=
     {Initial adder.v module}, label={prog:addition}]
@@ -627,42 +668,45 @@ module adder(input1, input2, out);
 \end{lstlisting}
 
 In order to replace this, all of the parameters for the DSP had to be declared,
-either explicitly or by reverting to the assumed base values of the primitive.
+either explicitly or by reverting to the implicit values of the primitive.
 The information for this implementation largely came from the 
-DSP function usage guide \cite{DSP_guide}.
+DSP function usage guide \cite{DSP_guide},
+which detailed the parameters that could be set
+and the structure of the block.
 Figure \ref{fig:dsp} in the Appendix displays a diagram from the guide 
 illustrating the structure of the DSP.
-The full adder.v module is shown in Program \ref{prog:DSP}
+The full \textit{adder.v} module is shown in Program \ref{prog:DSP}
 in the Appendix.
 
 Substituting in the SB\_MAC16 primitive required careful parameter configuration 
 and correct wiring of carry chains between the top and bottom halves of the DSP. 
 Unfortunately, official documentation lacked clear examples for 32-bit adders, 
-leading to misconfigured carry propagation.
+leading to misconfigured carry propagation when first implementing this change.
 
 Although the updated adder passed hardware tests with simple programs like 
 \texttt{softwareblink}, it silently failed on \texttt{bubblesort}, 
 producing incorrect output patterns partway through execution. 
-Because the bug was subtle and did not manifest immediately, 
+Because the bug was subtle and did not manifest clearly, 
 it evaded detection until several unrelated changes had been committed on top. 
-This triggered significant debugging effort, including rolling back 
+This resulted in significant debugging effort, including rolling back 
 and isolating the root cause.
 
-To avoid similar issues in future edits, module-level simulation was adopted. 
-Testbenches were created for units such as the ALU and adder, 
-which enabled more reliable verification without needing hardware access. 
+In the process of debugging, module-level simulation was adopted. 
+Testbenches were created for units such as the 
+\textit{alu.v} and \textit{adder.v} modules, 
+which enabled more reliable verification. 
 Although coverage remained limited, this approach caught issues 
 earlier in development and dramatically reduced the turnaround time 
 for identifying functional errors.
 
 This experience highlighted the value of incorporating simulation early, 
 especially when working with lower-level FPGA primitives where 
-subtle misconfigurations can lead to difficult-to-trace bugs.
+subtle misconfigurations can lead to difficult to trace bugs.
 
 \subsection*{Integration and Merging Difficulties}
 Working in parallel across multiple branches 
 introduced challenges when merging changes. 
-Key files such as \texttt{cpu.v} and \texttt{control\_unit.v} 
+Key files such as \textit{cpu.v} and \textit{control\_unit.v} 
 were edited by multiple team members, 
 frequently leading to merge conflicts or subtle behavioural bugs. 
 The difficulty was exacerbated by the tight coupling 
@@ -672,7 +716,7 @@ which meant that even small changes could have unexpected ripple effects.
 To mitigate this, a more disciplined Git workflow was adopted. 
 Changes were tested individually and only merged 
 into shared branches after validation. 
-This reduced regressions and provided a stable baseline 
+This reduced errors and provided a stable baseline 
 for collaborative development.
 
 \section{Test Procedure}
@@ -690,10 +734,10 @@ synthesising our implementation and performing a place-and-route operation.
 I saved the reports from these operations to a .txt file, 
 allowing me to perform \textit{git diff} on the text file 
 from any of my commits to easily see the impact that each change had 
-on various elements of resource usage, as well as timing.
+on various aspects of resource usage, as well as timing.
 I used a single command block to automate this workflow 
 to rapidly implement and track my changes, 
-which is shown below in Program \ref{prog:Workflow}.
+which is shown below in Program \ref{prog:Workflow} below.
 
 \begin{lstlisting}[language=bash,
     caption={Workflow used to synthesise and record results},
@@ -711,15 +755,15 @@ allowing me to synthesise, place-and-route, and record results in a single step.
 This would form the basis of my workflow throughout the project.
 
 By analysing the output text file, changes to resource utilisation
-could be quickly tracked to see what affect minor ammendments to the code may cause.
+could be quickly tracked to see what affect minor adjustments to the code may cause.
 Additionally, it allowed for comparisons with performance,
 enabling quick and informed decisions to be made regarding which changes 
 would be worth persuing.
 
 \subsection*{Validation of Changes}
 
-Each modification was tested using a combination of synthesis reports, 
-simulation, and hardware-based functional testing. 
+Each change was tested using synthesis reports and 
+simulation where possible to ensure correctness and efficiency.
 
 The \texttt{bubblesort} program was used as the main benchmark 
 against which changes could be compared. 
@@ -732,26 +776,13 @@ which functioned correctly with \texttt{softwareblink}
 but had a minor lapse in functionality with \texttt{bubblesort},
 due to the reliance in carry-on logic to perform.
 However, both programs were tested after every major commit to verify 
-that basic functionality had not regressed.
+that basic functionality had not been erased.
 
-For visual confirmation, the blinking patterns of LEDs were used as a crude 
-but reliable proxy for correct behaviour. 
-\texttt{softwareblink} was expected to blink with a regular pattern, 
+For visual confirmation, the blinking patterns of LEDs were used as an
+effective method of identifying failures.
+The \texttt{softwareblink} program was expected to blink with a regular pattern, 
 while \texttt{bubblesort} would trigger in a distinctive pattern 
-indicating the sorting algorithm.
-
-\subsection*{Simulation Support}
-
-In addition to hardware testing, 
-limited simulation was used later in the project to validate specific modules. 
-Custom testbenches were written for the ALU and adder, 
-especially during the implementation of DSP-based arithmetic. 
-These helped isolate functional bugs before hardware deployment and 
-improved turnaround time for debugging low-level modules.
-
-Although not all subsystems were covered by simulation, 
-this selective approach was sufficient to identify persistent logic errors 
-in isolated components, reducing dependency on the single FPGA board.
+representing the sorting algorithm.
 
 \subsection*{Version Control as a Testing Tool}
 
@@ -764,12 +795,12 @@ When testing on hardware was not immediately possible,
 multiple development branches were created from a known working commit. 
 This allowed experimental changes to be validated in isolation 
 before being merged back into the main branch. 
-If regressions were later discovered, \texttt{git bisect} and 
-commit-by-commit testing helped identify which change had introduced the issue.
+If errors were later discovered, \texttt{git bisect} and 
+commit-by-commit testing helped identify which change had introduced the issue,
+simplifiying and speeding up the debugging process.
 
-This version-controlled workflow, combined with the automated synthesis command, 
-created a highly reproducible and trackable test process that supported 
-rapid iteration without losing sight of project constraints.
+Automating synthesis and using Git made it easy to test changes quickly and reliably, 
+without losing track of progress when chanes were unsuccessfully implemented.
 
 \section{Conclusion}
 \label{sec:Conclusion}
@@ -782,25 +813,24 @@ low-level processor optimisation within the context of a
 RISC-V implementation on a resource-constrained FPGA. 
 With a focus on reducing logic cell usage and overall resource consumption, 
 each modification was carefully selected and evaluated for its tangible benefits 
-in both utilisation and design clarity.
+in resource utilisation.
 
-The most significant reductions were achieved through targeted simplifications, 
+The most significant reductions were achieved through targeted 
+removal of unused subsystems and redundant logic,
 such as the complete removal of the CSR subsystem. 
 This change alone reduced block RAM usage by over 25\% and 
-freed more than 250 logic cells, 
-highlighting the value of tailoring the design to 
-the specific requirements of the application. 
+freed more than 250 logic cells.
 Similarly, shifting the adder logic onto DSP blocks and 
 introducing signal width trimming contributed to further improvements, 
-freeing additional LUTs and global buffers while maintaining functional integrity. 
+freeing additional LUTs while maintaining functional integrity. 
 In some cases, such as the signal width reduction, 
 unexpected improvements in timing performance were also observed, 
-indicating that some resource optimisations may bring ancillary benefits.
+indicating that some resource optimisations may bring other benefits.
 
 A disciplined approach to development - built around modular testing, 
-Git version control, and a structured build-and-diff workflow - 
+Git version control, and a systematic build and compare workflow - 
 allowed for rapid iteration and clear attribution of each modification's impact. 
-The bubblesort program served as a particularly effective benchmark, 
+The \texttt{bubblesort} program served as a particularly effective benchmark, 
 challenging the processor more thoroughly than simpler programs and 
 ensuring that all pipeline and control logic remained operational after each change.
 
@@ -812,13 +842,17 @@ would have likely avoided several setbacks.
 Limited hardware access also constrained our ability to validate changes quickly, 
 reinforcing the need for a well-developed simulation environment from the outset.
 
-Going forward, further gains could be achieved by extending 
-block RAM usage for register file elements, tightening control signal granularity, 
-and evaluating architectural changes like pipeline restructuring. 
-While the final design reflects a series of small optimisations 
-rather than sweeping changes, their combined impact is substantial - 
-demonstrating how even a constrained, legacy-compatible processor 
-can be made markedly more efficient through careful hardware-aware engineering.
+Going forward, the freed block RAM and DSP capacity creates clear opportunities 
+for further resource optimisation. 
+Logic structures that currently use LUTs - such as counters - 
+could be migrated into the available block RAM to reduce logic cell pressure. 
+Similarly, more arithmetic operations could be ported to DSP blocks, 
+especially where additions or subtractions are used repeatedly. 
+While these changes were not implemented due to time constraints, 
+they represent practical and realistic extensions of the existing work. 
+They would continue the theme of targeted 
+optimisations and build upon the 
+resource savings already achieved in this project.
 
 \begin{thebibliography}{9}
 
@@ -827,7 +861,7 @@ Width parameter on the FPGA \textit{Optimizing Hardware for FPGAs}. Stitt Hub, 2
 Available at: 
 \url{https://stitt-hub.com/optimizing-hardware-for-fpgas/}
 
-\bibitem{SoC_CSR_Safety} Basic CSR functionality.
+\bibitem{CSR} Basic CSR functionality.
 \textit{Functional Safety for Control and Status Registers}. 
 Electronic Design, 2024. Available at:  
 \href{https://www.electronicdesign.com/technologies/eda/article/55040504/arteris-ip-exploring-soc-design-control-and-status-registers-for-functional-safety}{https://www.electronicdesign.com}
