@@ -777,6 +777,49 @@ rapid iteration without losing sight of project constraints.
 % Use this section to provide a retrospective on how your team coordinated amongst yourselves
 % how that worked, and what you would do differently in the future (1-2 A4 sides)
 
+This project provided a comprehensive opportunity to explore 
+low-level processor optimisation within the context of a 
+RISC-V implementation on a resource-constrained FPGA. 
+With a focus on reducing logic cell usage and overall resource consumption, 
+each modification was carefully selected and evaluated for its tangible benefits 
+in both utilisation and design clarity.
+
+The most significant reductions were achieved through targeted simplifications, 
+such as the complete removal of the CSR subsystem. 
+This change alone reduced block RAM usage by over 25\% and 
+freed more than 250 logic cells, 
+highlighting the value of tailoring the design to 
+the specific requirements of the application. 
+Similarly, shifting the adder logic onto DSP blocks and 
+introducing signal width trimming contributed to further improvements, 
+freeing additional LUTs and global buffers while maintaining functional integrity. 
+In some cases, such as the signal width reduction, 
+unexpected improvements in timing performance were also observed, 
+indicating that some resource optimisations may bring ancillary benefits.
+
+A disciplined approach to development - built around modular testing, 
+Git version control, and a structured build-and-diff workflow - 
+allowed for rapid iteration and clear attribution of each modification's impact. 
+The bubblesort program served as a particularly effective benchmark, 
+challenging the processor more thoroughly than simpler programs and 
+ensuring that all pipeline and control logic remained operational after each change.
+
+This experience also underscored the importance of 
+effective team coordination and version control. 
+While our use of branching and commit tracking improved over time, 
+earlier adoption of formal simulation and stricter integration discipline 
+would have likely avoided several setbacks. 
+Limited hardware access also constrained our ability to validate changes quickly, 
+reinforcing the need for a well-developed simulation environment from the outset.
+
+Going forward, further gains could be achieved by extending 
+block RAM usage for register file elements, tightening control signal granularity, 
+and evaluating architectural changes like pipeline restructuring. 
+While the final design reflects a series of small optimisations 
+rather than sweeping changes, their combined impact is substantial - 
+demonstrating how even a constrained, legacy-compatible processor 
+can be made markedly more efficient through careful hardware-aware engineering.
+
 \begin{thebibliography}{9}
 
 \bibitem{DSP_guide}
