@@ -36,8 +36,8 @@
 % \titlespacing{\subsection}{0pt}{0.8em}{0.3em}
 
 
-\lstdefinestyle{vhdl-style}{
-    language=VHDL,
+\lstdefinestyle{verilog-style}{
+    language=Verilog,
     basicstyle=\ttfamily\footnotesize,
     keywordstyle=\bfseries\color{blue},
     commentstyle=\itshape\color{gray},
@@ -49,7 +49,7 @@
     showstringspaces=false,
     frame=single
 }
-\lstset{style=vhdl-style}
+\lstset{style=verilog-style}
 \lstset{captionpos=b}
 \lstset{basicstyle=\ttfamily\scriptsize} 
 \renewcommand{\lstlistingname}{Program}
@@ -349,6 +349,67 @@ summarised in Table~\ref{tab:Program_Counter} in the Appendix.
 \subsection{Signal Width Reduction}
 \label{sec:Signal_Width}
 
+Another optimisation involved reducing the width of a control signal used in 
+the execution-to-memory pipeline stage. 
+This signal, \texttt{ex\_cont\_mux\_out}, 
+is used to carry control values from the decode 
+stage into the execution stage, 
+particularly for managing behaviours such as branching, memory operations, and ALU control. 
+In the baseline implementation, this signal was declared as 32 bits wide, 
+despite the fact that only the lower 11 bits 
+were ever referenced or extracted in downstream modules. 
+This resulted in an oversized bus that incurred extra logic and routing 
+costs without delivering any functional benefit.
+
+To identify the mismatch, \texttt{grep} was used to trace the usage of 
+\texttt{cont\_mux\_out} throughout the Verilog files. 
+This revealed that only specific slices of the signal were ever used, 
+confirming that the top 21 bits could be safely discarded. 
+With this knowledge, a dedicated 11-bit multiplexer module, 
+\texttt{mux2to1\_11bit}, was written and substituted alongside the 
+generic 32-bit \texttt{mux2to1}. 
+The change required updating the 
+module instantiation and associated wiring, 
+but left the logic semantics unchanged.
+This initial segment of code is shown in Program \ref{prog:mux_11bit}
+in the Appendix for completeness.
+
+After implementing this successful change, 
+reducing logic cell usage but maintaining functionality of the program,
+this was expanded upon to make this approach more flexible and maintainable.
+The \texttt{mux2to1} assignment was expanded to support a parameterised width, 
+allowing the same module to be reused in other parts of the design 
+without hardcoding the bit width. 
+This is shown in Program \ref{prog:mux} below.
+
+\begin{lstlisting}[style=verilog-style, caption=
+    {Fixed-width 11-bit multiplexer}, label={prog:mux}]
+module mux2to1_param #(parameter WIDTH = 32)
+( // Example instantiation: mux2to1_param #(.WIDTH(32))
+    input  [WIDTH-1:0] input0,
+    input  [WIDTH-1:0] input1,
+    input              select,
+    output [WIDTH-1:0] out
+);
+    assign out = (select) ? input1 : input0;
+endmodule
+\end{lstlisting}
+
+This improvement reduced logic cell usage by 25 LUTs, as shown in 
+Table \ref{tab:Mux} in the Appendix.
+
+It should be noted that some widths were kept at 32 bits,
+despite possessing redundancy in their width.
+These were left unchanged as, 
+although reducing their width would result in slightly fewer LUTs being used,
+leaving their widths at 32 bits with the generic parameter multiplexing 
+ended up reducing the delay from around 76ns to 69ns,
+producing an unnaccounted for reduction in delay of 10\%.
+In the future, this consequence would have to be probed further
+to determine the root cause, but due to time constraints this was not possible.
+There may be a more optimal configuration that could reduce resource usage
+and improve timing further, but this was not worked out.
+
 \subsection{DSP Substitution}
 \label{sec:DSP}
 
@@ -474,5 +535,27 @@ summarised in Table~\ref{tab:Program_Counter} in the Appendix.
     \caption{Report after removing all CSR related registers and wires}
     \label{tab:CSR}
 \end{table}
+
+\section{Code}
+
+\begin{lstlisting}[style=verilog-style, caption=
+    {Fixed-width 11-bit multiplexer}, label={prog:mux_11bit}]
+module mux2to1(input0, input1, select, out);
+	input [31:0]	input0, input1;
+	input		select;
+	output [31:0]	out;
+
+	assign out = (select) ? input1 : input0;
+endmodule
+
+module mux2to1_11bit(input0, input1, select, out); 
+// grep -rn "cont_mux_out" ../processor/verilog shows no usages over 11 bits
+	input [10:0]	input0, input1;
+	input		select;
+	output [10:0]	out;
+
+	assign out = (select) ? input1 : input0;
+endmodule
+\end{lstlisting}
 
 \end{document}
